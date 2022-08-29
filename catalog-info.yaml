@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "shared-snowplow-consumer"
+  description: "shared consumer for consuming from event-bridge and emitting to snowplow "
+  annotations:
+    github.com/project-slug: pocket/"shared-snowplow-consumer"
+    github.com/team-slug: "backend"
+    circleci.com/project-slug: github/pocket/"shared-snowplow-consumer"
+    sentry.io/project-slug: "shared-snowplow-consumer"
+spec:
+  type: service
+  owner: backend
+  lifecycle: production
+  providesApis:
+    - "shared-snowplow-consumer"
+
+---
+
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: "shared-snowplow-consumer"
+  description: "shared consumer for consuming from event-bridge and emitting to snowplow "
+spec:
+  type: graphql
+  owner: backend
+  definition: |
+    query {}
+  lifecycle: production
