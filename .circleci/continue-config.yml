@@ -1,0 +1,262 @@
+version: 2.1
+
+setup: false
+
+orbs:
+  pocket: pocket/circleci-orbs@1.2.7
+  aws-cli: circleci/aws-cli@1.2.1
+
+# the default pipeline parameters, which will be updated according to
+# the results of the path-filtering orb
+parameters:
+  run-build-deploy-events-lambda-job:
+    type: boolean
+    default: false
+  # Just need to accept this parameter from the setup job
+  build-on-change:
+    type: boolean
+    default: false
+
+# Workflow shortcuts
+not_dev_main: &not_dev_main
+  filters:
+    branches:
+      ignore:
+        - dev
+        - main
+
+only_main: &only_main
+  filters:
+    branches:
+      only:
+        - main
+
+only_dev: &only_dev
+  filters:
+    branches:
+      only:
+        - dev
+
+jobs:
+  test_integrations:
+    description: Run integration tests against external services, e.g snowplow
+    parameters:
+      path:
+        type: string
+        description: The relative path containing the lambda source code
+    docker:
+      # Node, npm, sudo, etc.
+      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          - NODE_ENV=test
+          - AWS_XRAY_LOG_LEVEL=silent
+          - AWS_XRAY_CONTEXT_MISSING=LOG_ERROR
+      # localstack
+      - image: localstack/localstack@sha256:3d462457a7e069541eeff15e6714bfe14861997d52ab6025ee13b1bf9f1a8f82
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          DEBUG: 1
+          SERVICES: dynamodb
+          DATA_DIR: /tmp/localstack/data
+          EXTRA_CORS_ALLOWED_HEADERS: Content-Disposition, Content-Type, x-amz-acl
+          EXTRA_CORS_EXPOSE_HEADERS: ETag
+          HOSTNAME_EXTERNAL: localstack
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            # If this gets our of sync, you can increment the version (vX).  Just be
+            # sure to match that version when saving the cache as well.
+            - node-v2-<< parameters.path >>-{{ checksum "package-lock.json" }}
+      - run:
+          name: Authenticate with GitHub package registry
+          command: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
+      - run:
+          name: install node modules
+          command: |
+            cd << parameters.path >>
+            npm ci
+      # Save the cache to avoid extraneous downloads
+      - save_cache:
+          key: node-v1-<< parameters.path >>-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: run setup.sh
+          command: |
+            export $(egrep -v '^#' .docker/local.env | xargs -0) && ./.circleci/scripts/setup.sh --hosts --aws
+      - run:
+          name: run integration tests
+          command: |
+            export $(egrep -v '^#' .docker/local.env | xargs -0)
+            cd << parameters.path >>
+            npm run test-integrations  -- --ci --watchAll=false --forceExit
+
+  test_specs:
+    description: Run spec tests
+    parameters:
+      path:
+        type: string
+        description: The relative path containing the lambda source code
+    docker:
+      - image: cimg/node:16.16@sha256:a573c7e7cd841617c51f0835857dad5800d0f0dd492a82c2b336500604eb0c72
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          NODE_ENV: test
+          AWS_XRAY_LOG_LEVEL: silent
+          AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            # If this gets our of sync, you can increment the version (vX).  Just be
+            # sure to match that version when saving the cache as well.
+            - node-v2-<< parameters.path >>-{{ checksum "package-lock.json" }}
+      - run:
+          name: Authenticate with GitHub package registry
+          command: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
+      - run:
+          name: install node modules
+          command: |
+            cd << parameters.path >>
+            npm ci
+      # Save the cache to avoid extraneous downloads
+      - save_cache:
+          key: node-v1-<< parameters.path >>-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: run tests
+          command: |
+            cd << parameters.path >>
+            npm run test
+  lambda:
+    description: Builds and Optionally deploys all the associated lambdas
+    parameters:
+      env_capital_name:
+        default: Env Name
+        description: The env capital name e.g Dev
+        type: string
+      env_lower_name:
+        default: Env Name
+        description: The env lower name, e.g dev
+        type: string
+      lambda_lower_name:
+        default: function
+        description: lambda function name
+        type: string
+      resource_name:
+        type: string
+        description: The title-cased name of the resource (used for referencing aws resources)
+      path:
+        type: string
+        description: The relative path containing the lambda source code
+      deploy:
+        type: boolean
+        default: true
+    docker:
+      - image: cimg/node:16.16@sha256:a573c7e7cd841617c51f0835857dad5800d0f0dd492a82c2b336500604eb0c72
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+    steps:
+      - checkout
+      - run:
+          name: Package Lambda
+          command: |
+            cd << parameters.path >>
+            npm ci --production
+            npm run build
+            cp -r package.json package-lock.json dist/
+            cp -r node_modules/ dist/node_modules/
+            cd dist
+            mkdir -p /tmp
+            zip -r9 "/tmp/$CIRCLE_SHA1-<< parameters.resource_name >>.zip" *
+            cp "/tmp/$CIRCLE_SHA1-<< parameters.resource_name >>.zip" /tmp/build-<< parameters.resource_name >>.zip
+      - when:
+          condition: << parameters.deploy >>
+          steps:
+            - aws-cli/setup:
+                aws-access-key-id: << parameters.env_capital_name >>_AWS_ACCESS_KEY
+                aws-secret-access-key: << parameters.env_capital_name >>_AWS_SECRET_ACCESS_KEY
+                aws-region: << parameters.env_capital_name >>_AWS_DEFAULT_REGION
+            - run:
+                name: Upload Package
+                command: aws s3 cp "/tmp/$CIRCLE_SHA1-<< parameters.resource_name >>.zip" s3://pocket-sharedsnowplowconsumer-<< parameters.env_lower_name >>-<< parameters.lambda_lower_name >>/
+
+            - pocket/deploy_lambda:
+                s3-bucket: pocket-sharedsnowplowconsumer-<< parameters.env_lower_name >>-<< parameters.lambda_lower_name >>
+                s3-key: $CIRCLE_SHA1-<< parameters.resource_name >>.zip
+                aws-access-key-id: << parameters.env_capital_name >>_AWS_ACCESS_KEY
+                aws-secret-access-key: << parameters.env_capital_name >>_AWS_SECRET_ACCESS_KEY
+                aws-region: << parameters.env_capital_name >>_AWS_DEFAULT_REGION
+                codedeploy-application-name: SharedSnowplowConsumer-<< parameters.env_capital_name >>-<< parameters.resource_name >>-Lambda
+                codedeploy-deployment-group-name: SharedSnowplowConsumer-<< parameters.env_capital_name >>-<< parameters.resource_name >>-Lambda
+                function-name: SharedSnowplowConsumer-<< parameters.env_capital_name >>-<< parameters.resource_name >>-Function
+
+      - store_artifacts:
+          path: /tmp/$CIRCLE_SHA1-<< parameters.resource_name >>.zip
+
+
+# here we specify our workflows, most of which are conditionally
+# executed based upon pipeline parameter values. Each workflow calls a
+# specific job defined above, in the jobs section.
+workflows:
+  # when pipeline parameter, run-build-deploy-lambda-job is true, the
+  # run-build-deploy-events-lambda-job job is triggered.
+  events:
+    when: << pipeline.parameters.run-build-deploy-events-lambda-job >>
+    jobs:
+      - test_specs:
+          path: src/lambda
+          name: test_specs_events
+
+      - test_integrations:
+          path: src/lambda
+          name: test_integrations_events
+
+      # Try building the lambda on each branch
+      - lambda:
+          <<: *not_dev_main
+          context: pocket
+          name: build_lambda_events
+          env_capital_name: Prod
+          env_lower_name: prod
+          resource_name: SharedEventConsumer
+          lambda_lower_name: sharedeventconsumer
+          path: src/lambda
+          deploy: false
+
+
+      # Build & Deploy Development Lambdas
+      - lambda:
+          <<: *only_dev
+          context: pocket
+          name: deploy_lambda_events_dev
+          env_capital_name: Dev
+          env_lower_name: dev
+          resource_name: SharedEventConsumer
+          lambda_lower_name: sharedeventconsumer
+          path: src/lambda
+          deploy: true
+
+      # Build & Deploy Production Lambdas
+      - lambda:
+          <<: *only_main
+          context: pocket
+          name: deploy_lambda_events_prod
+          env_capital_name: Prod
+          env_lower_name: prod
+          resource_name: SharedEventConsumer
+          lambda_lower_name: sharedeventconsumer
+          path: src/lambda
+          deploy: true

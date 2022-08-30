@@ -1,9 +1,19 @@
 version: 2.1
 
+setup: true
+
+parameters:
+  build-on-change:
+    description: Check for file changes to lambdas before build/deploy. Setting this to false will force build.
+    type: boolean
+    default: true
+
 orbs:
-  aws-ecs: circleci/aws-ecs@2.0.0
+  pocket: pocket/circleci-orbs@1.2.8
   aws-cli: circleci/aws-cli@1.2.1
-  pocket: pocket/circleci-orbs@1.2.4
+  backstage-entity-validator: roadiehq/backstage-entity-validator@0.4.2
+  path-filtering: circleci/path-filtering@0.1.3
+  continuation: circleci/continuation@0.3.1
 
 # Workflow shortcuts
 # You can remove unnecessary shortcuts as applicable
@@ -45,50 +55,6 @@ only_dev: &only_dev
       only:
         - dev
 
-commands:
-  setup_node:
-    description: Install npm packages
-    parameters:
-      dir:
-        type: string
-        description: The source directory to install node packages
-        default: .
-      description:
-        type: string
-        description: Description of the node module installation
-        default: Install node modules
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            # If this gets our of sync, you can increment the version (vX).  Just be
-            # sure to match that version when saving the cache as well.
-            - node-v2-<< parameters.dir >>-{{ checksum "package-lock.json" }}
-      - run:
-          name: Authenticate with GitHub package registry
-          command: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
-      - run:
-          name: << parameters.description >>
-          command: cd << parameters.dir >> && npm ci
-      # Save the cache to avoid extraneous downloads
-      - save_cache:
-          key: node-v2-<< parameters.dir >>-{{ checksum "package-lock.json" }}
-          paths:
-            - node_modules
-            - .npm
-
-  install_dependencies:
-    description: Install all dependencies for snowplow shared consumer
-    steps:
-      - setup_node:
-          description: Install dev dependencies
-      - setup_node:
-          description: Install dependencies for the snowplow_shared_consumer
-          dir: snowplow_shared_consumer
-
 jobs:
   run_code_build:
     description: run codebuild to apply infrastructure
@@ -111,7 +77,7 @@ jobs:
         type: boolean
         default: false
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:16.16@sha256:a573c7e7cd841617c51f0835857dad5800d0f0dd492a82c2b336500604eb0c72
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -151,146 +117,11 @@ jobs:
       - store_artifacts:
           path: /tmp/build.zip
 
-  build_and_deploy_lambda:
-    description: build and deploy the app code to the lambda
-    parameters:
-      dir:
-        type: string
-        description: The lambda source directory
-      env_lower_name:
-        type: string
-        description: The lower case env name
-      env_capital_name:
-        description: The env capital name
-        type: string
-      lambda_lower_name:
-        type: string
-        description: The lower case lambda name
-      lambda_name:
-        description: The lambda capital name
-        type: string
-      deploy:
-        description: deploys on true
-        type: boolean
-        default: false
-    docker:
-      - image: circleci/node:14
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
-    steps:
-      - checkout
-      - install_dependencies
-      - run:
-          name: Package Lambda
-          command: |
-            npm run build
-            cp -r << parameters.dir >>/node_modules/ ./dist/<< parameters.dir >>/node_modules/
-            cd ./dist/<< parameters.dir >>
-            zip -r9 "/tmp/$CIRCLE_SHA1.zip" *
-            mkdir -p /tmp
-            cp "/tmp/$CIRCLE_SHA1.zip" /tmp/build.zip
-      - aws-cli/setup:
-          aws-access-key-id: << parameters.env_capital_name >>_AWS_ACCESS_KEY
-          aws-secret-access-key: << parameters.env_capital_name >>_AWS_SECRET_ACCESS_KEY
-          aws-region: << parameters.env_capital_name >>_AWS_DEFAULT_REGION
-      - when:
-          condition: << parameters.deploy >>
-          steps:
-            - run:
-                name: Upload Package
-                command: aws s3 cp "/tmp/$CIRCLE_SHA1.zip" s3://pocket-snowplowsharedconsumer-<< parameters.env_lower_name >>-<< parameters.lambda_lower_name >>/
-            - pocket/deploy_lambda:
-                s3-bucket: pocket-snowplowsharedconsumer-<< parameters.env_lower_name >>-<< parameters.lambda_lower_name >>
-                aws-access-key-id: << parameters.env_capital_name >>_AWS_ACCESS_KEY
-                aws-secret-access-key: << parameters.env_capital_name >>_AWS_SECRET_ACCESS_KEY
-                aws-region: << parameters.env_capital_name >>_AWS_DEFAULT_REGION
-                codedeploy-application-name: SnowplowSharedConsumer-<< parameters.env_capital_name >>-<< parameters.lambda_name >>-Lambda
-                codedeploy-deployment-group-name: SnowplowSharedConsumer-<< parameters.env_capital_name >>-<< parameters.lambda_name >>-Lambda
-                function-name: SnowplowSharedConsumer-<< parameters.env_capital_name >>-<< parameters.lambda_name >>-Function
-      - store_artifacts:
-          path: /tmp/build.zip
-
-  test_specs:
-    description: Run spec tests
-    docker:
-      - image: circleci/node:16
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
-        environment:
-          NODE_ENV: test
-          AWS_XRAY_LOG_LEVEL: silent
-          AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
-    steps:
-      - install_dependencies
-      - run:
-          name: run tests
-          command: npm run test-spec
-
 workflows:
-  all:
+  force-build:
+    when:
+      not: << pipeline.parameters.build-on-change >>
     jobs:
-      - test_specs:
-          <<: *not_main
-          context: pocket
-
-      - run_code_build:
-          <<: *only_dev
-          context: pocket
-          name: run_dev_code_build
-          codebuild_project_name: SnowplowSharedConsumer-Dev
-          codebuild_project_branch: dev
-          env_lower_name: dev
-          env_capital_name: Dev
-
-      - run_code_build:
-          <<: *only_main
-          context: pocket
-          name: run_prod_code_build
-          codebuild_project_name: SnowplowSharedConsumer-Prod
-          codebuild_project_branch: main
-          env_lower_name: prod
-          env_capital_name: Prod
-
-      # SQS lambda deployment
-      # Build the sqs lambda on each branch
-      - build_and_deploy_lambda:
-          <<: *not_dev_main
-          context: pocket
-          name: build_snowplow_shared_consumer
-          env_lower_name: prod
-          env_capital_name: Prod
-          lambda_lower_name: snowplow-shared-consumer
-          lambda_name: Snowplow-Shared-Consumer
-
-
-      # Build & Deploy SQS lambda on dev branch
-      - build_and_deploy_lambda:
-          <<: *only_dev
-          context: pocket
-          name: deploy_snowplow_shared_consumer_dev
-          env_lower_name: dev
-          env_capital_name: Dev
-          lambda_lower_name: shared-event-consumer
-          lambda_name: SharedEventConsumer
-          deploy: true
-          requires:
-            - run_dev_code_build
-
-      # Build & Deploy Sqs lambda in main branch
-      - build_and_deploy_lambda:
-          <<: *only_main
-          context: pocket
-          name: deploy_snowplow_shared_consumer_prod
-          env_lower_name: prod
-          env_capital_name: Prod
-          lambda_lower_name: shared-event-consumer
-          lambda_name: SharedEventConsumer
-          deploy: true
-          requires:
-            - run_prod_code_build
-
       # Prod
       - pocket/setup_deploy_params:
           <<: *only_main
@@ -311,28 +142,78 @@ workflows:
           env: Dev
           service_name: ${SERVICE_NAME}
 
-      # Notify sentry of main deployment
-      - pocket/sentry_release_notification:
-          <<: *only_main
-          name: sentry-release-notification-prod
-          context: pocket
-          repository_name: Pocket/${CONSTRUCT_NAME}
-          sentry_project_name: ${CONSTRUCT_NAME}
-          sentry_env: production
-          sentry_org: pocket
-          workspace-path: /tmp/workspace
-          requires:
-            - deploy_snowplow_shared_consumer_prod
-
-      # Notify sentry of dev deployment
-      - pocket/sentry_release_notification:
+      - run_code_build:
           <<: *only_dev
-          name: sentry-release-notification-dev
           context: pocket
-          repository_name: Pocket/${CONSTRUCT_NAME}
-          sentry_project_name: ${CONSTRUCT_NAME}
-          sentry_env: development
-          sentry_org: pocket
-          workspace-path: /tmp/workspace
-          requires:
-            - deploy_snowplow_shared_consumer_dev
+          name: run_dev_code_build
+          codebuild_project_name: SharedSnowplowConsumer-Dev
+          codebuild_project_branch: dev
+          env_lower_name: dev
+          env_capital_name: Dev
+
+      - run_code_build:
+          <<: *only_main
+          context: pocket
+          name: run_prod_code_build
+          codebuild_project_name: SharedSnowplowConsumer-Prod
+          codebuild_project_branch: main
+          env_lower_name: prod
+          env_capital_name: Prod
+
+      - continuation/continue:
+          configuration_path: .circleci/continue-config.yml
+          parameters: '{"run-build-deploy-events-lambda-job":true}'
+
+  base:
+    when: << pipeline.parameters.build-on-change >>
+    jobs:
+      #Prod
+      - pocket/setup_deploy_params:
+          <<: *only_main
+          name: setup-deploy-params-prod
+          aws_access_key_id: Prod_AWS_ACCESS_KEY
+          aws_secret_access_key: Prod_AWS_SECRET_ACCESS_KEY
+          context: pocket
+          env: Prod
+          service_name: ${SERVICE_NAME}
+      # Dev
+      - pocket/setup_deploy_params:
+          <<: *only_dev
+          name: setup-deploy-params-dev
+          aws_access_key_id: Dev_AWS_ACCESS_KEY
+          aws_secret_access_key: Dev_AWS_SECRET_ACCESS_KEY
+          context: pocket
+          env: Dev
+          service_name: ${SERVICE_NAME}
+
+      - run_code_build:
+          <<: *only_dev
+          context: pocket
+          name: run_dev_code_build
+          codebuild_project_name: SharedSnowplowConsumer-Dev
+          codebuild_project_branch: dev
+          env_lower_name: dev
+          env_capital_name: Dev
+
+      - run_code_build:
+          <<: *only_main
+          context: pocket
+          name: run_prod_code_build
+          codebuild_project_name: SharedSnowplowConsumer-Prod
+          codebuild_project_branch: main
+          env_lower_name: prod
+          env_capital_name: Prod
+
+      - path-filtering/filter:
+          name: check-updated-files
+          # 3-column, whitespace-delimited mapping. One mapping per
+          # line:
+          # <regex path-to-test> <parameter-to-set> <value-of-pipeline-parameter>
+          # If build-on-change is false, the 'force-build' will trigger so the param is set to false to avoid double-build
+          mapping: |
+            src/lambda/events/.* run-build-deploy-events-lambda-job << pipeline.parameters.build-on-change >>
+          base-revision: main
+          # this is the path of the configuration we should trigger once
+          # path filtering and pipeline parameter value updates are
+          # complete.
+          config-path: .circleci/continue-config.yml
