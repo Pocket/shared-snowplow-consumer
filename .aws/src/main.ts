@@ -45,7 +45,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     const pagerDuty = this.createPagerDuty();
 
     // Create Lambda to consume from pocket-shared-event-bus and send it to snowplow
-    const sqsEventLambda = new SQSConsumerLambda(this, 'SnowplowConsumerLambda', {
+    const sqsEventLambda = new SQSConsumerLambda(this, 'SharedEventConsumer', {
       vpc: pocketVPC,
       pagerDuty,
     });

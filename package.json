@@ -26,23 +26,10 @@
   },
   "homepage": "https://github.com/Pocketshared-snowplow-consumer#readme",
   "dependencies": {
-    "@apollo/federation": "^0.33.9",
     "@pocket-tools/apollo-utils": "^2.2.0",
-    "@sentry/node": "^6.17.2",
-    "@sentry/tracing": "^6.17.4",
-    "apollo-client": "^2.6.10",
-    "apollo-datasource-rest": "^3.5.1",
-    "apollo-link": "^1.2.14",
-    "apollo-link-rest": "^0.8.0",
-    "apollo-server": "^3.4.1",
-    "apollo-server-cache-redis": "^3.3.1",
-    "apollo-server-express": "^3.4.1",
-    "apollo-server-plugin-response-cache": "^3.3.0",
+    "@sentry/serverless": "7.7.0",
     "aws-xray-sdk-express": "^3.3.7",
-    "dataloader": "^2.0.0",
-    "graphql": "^15.7.2",
-    "graphql-anywhere": "^4.2.7",
-    "graphql-tag": "^2.12.6"
+    "aws-lambda": "1.0.7"
   },
   "devDependencies": {
     "@types/chai": "^4.3.3",
