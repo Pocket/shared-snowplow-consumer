@@ -58,7 +58,7 @@ phases:
       - npm ci
       # synthesize the js into terraform json with the proper node environment
       - 'if [ "$GIT_BRANCH" == "$DEV_BRANCH" ]; then NODE_ENV=development npm run synth; else npm run synth; fi'
-      - cd cdktf.out/stacks/acme #TODO: Update this to match the synthesized terraform stack name in line 306 of .aws/main.ts
+      - cd cdktf.out/stacks/shared-snowplow-consumer
       - terraform init
   build:
     commands:
@@ -71,7 +71,6 @@ phases:
       - 'if [ "$GIT_BRANCH" == "$MAIN_BRANCH" ]; then terraform apply -auto-approve -no-color; fi'
   post_build:
     commands:
-      - 'if [ "$GIT_BRANCH" == "$MAIN_BRANCH" ] || [ "$GIT_BRANCH" == "$DEV_BRANCH" ]; then cp appspec.json taskdef.json ../../../../; fi'
       # get back to the root dir
       - cd ../../
       - echo Build completed on `date`
