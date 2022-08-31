@@ -26,7 +26,7 @@ export class SQSConsumerLambda extends Resource {
 
     this.construct = new PocketSQSWithLambdaTarget(this, name.toLowerCase(), {
       name: `${stackConfig.prefix}-${name}`,
-      batchSize: 10,
+      batchSize: 5,
       sqsQueue: {
         maxReceiveCount: 3,
         visibilityTimeoutSeconds: 300,
