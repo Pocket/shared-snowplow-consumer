@@ -21,7 +21,7 @@
     "@pocket-tools/eslint-config": "2.0.0",
     "@pocket-tools/tsconfig": "2.0.1",
     "@types/jest": "28.1.8",
-    "@typescript-eslint/eslint-plugin": "5.30.7",
+    "@typescript-eslint/eslint-plugin": "5.36.1",
     "eslint-plugin-prettier": "4.2.1"
   }
 }
