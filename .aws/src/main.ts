@@ -7,125 +7,52 @@ import {
 } from 'cdktf';
 import {
   AwsProvider,
-  DataAwsCallerIdentity,
-  DataAwsKmsAlias,
-  DataAwsRegion,
-  DataAwsSnsTopic,
+  iam,
+  datasources
 } from '@cdktf/provider-aws';
 import { config } from './config';
 import {
-  ApplicationRedis,
-  PocketALBApplication,
-  PocketECSCodePipeline,
-  PocketPagerDuty,
   PocketVPC,
+  PocketPagerDuty,
+  ApplicationSqsSnsTopicSubscription,
 } from '@pocket-tools/terraform-modules';
 import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
+import { ArchiveProvider } from '@cdktf/provider-archive';
 import { NullProvider } from '@cdktf/provider-null';
+import { SQSConsumerLambda } from './sqsConsumerLambda';
 
-//todo: change class name to your service name
-class Acme extends TerraformStack {
-  constructor(scope: Construct, name: string) {
+class SnowplowSharedConsumerStack extends TerraformStack {
+  constructor(scope: Construct, private name: string) {
     super(scope, name);
 
     new AwsProvider(this, 'aws', { region: 'us-east-1' });
     new PagerdutyProvider(this, 'pagerduty_provider', { token: undefined });
     new LocalProvider(this, 'local_provider');
     new NullProvider(this, 'null_provider');
-    
+    new ArchiveProvider(this, 'archive_provider');
+
     new RemoteBackend(this, {
       hostname: 'app.terraform.io',
       organization: 'Pocket',
       workspaces: [{ prefix: `${config.name}-` }],
     });
 
-    const region = new DataAwsRegion(this, 'region');
-    const caller = new DataAwsCallerIdentity(this, 'caller');
-    const cache = Acme.createElasticache(this);
+    const region = new datasources.DataAwsRegion(this, 'region');
+    const caller = new datasources.DataAwsCallerIdentity(this, 'caller');
+    const pocketVPC = new PocketVPC(this, 'pocket-vpc');
 
-    const pocketApp = this.createPocketAlbApplication({
-      pagerDuty: this.createPagerDuty(),
-      secretsManagerKmsAlias: this.getSecretsManagerKmsAlias(),
-      snsTopic: this.getCodeDeploySnsTopic(),
-      region,
-      caller,
-      cache,
+    const pagerDuty = this.createPagerDuty();
+
+    // Create Lambda to consume from pocket-shared-event-bus and send it to snowplow
+    const sqsEventLambda = new SQSConsumerLambda(this, 'SharedEventConsumer', {
+      vpc: pocketVPC,
+      pagerDuty,
     });
 
-    this.createApplicationCodePipeline(pocketApp);
-  }
-
-  /**
-   * Creates the elasticache and returns the node address list
-   * @param scope
-   * @private
-   */
-  private static createElasticache(scope: Construct): {
-    primaryEndpoint: string;
-    readerEndpoint: string;
-  } {
-    const pocketVPC = new PocketVPC(scope, 'pocket-vpc');
-
-    const elasticache = new ApplicationRedis(scope, 'redis', {
-      //Usually we would set the security group ids of the service that needs to hit this.
-      //However we don't have the necessary security group because it gets created in PocketALBApplication
-      //So instead we set it to null and allow anything within the vpc to access it.
-      //This is not ideal..
-      //Ideally we need to be able to add security groups to the ALB application.
-      allowedIngressSecurityGroupIds: undefined,
-      node: {
-        count: config.cacheNodes,
-        size: config.cacheSize,
-      },
-      subnetIds: pocketVPC.privateSubnetIds,
-      tags: config.tags,
-      vpcId: pocketVPC.vpc.id,
-      prefix: config.prefix,
-    });
-
-    return {
-      primaryEndpoint:
-        elasticache.elasticacheReplicationGroup.primaryEndpointAddress,
-      readerEndpoint:
-        elasticache.elasticacheReplicationGroup.readerEndpointAddress,
-    };
-  }
-
-  /**
-   * Get the sns topic for code deploy
-   * @private
-   */
-  private getCodeDeploySnsTopic() {
-    return new DataAwsSnsTopic(this, 'backend_notifications', {
-      name: `Backend-${config.environment}-ChatBot`,
-    });
-  }
-
-  /**
-   * Get secrets manager kms alias
-   * @private
-   */
-  private getSecretsManagerKmsAlias() {
-    return new DataAwsKmsAlias(this, 'kms_alias', {
-      name: 'alias/aws/secretsmanager',
-    });
-  }
-
-  /**
-   * Create CodePipeline to build and deploy terraform and ecs
-   * @param app
-   * @private
-   */
-  private createApplicationCodePipeline(app: PocketALBApplication) {
-    new PocketECSCodePipeline(this, 'code-pipeline', {
-      prefix: config.prefix,
-      source: {
-        codeStarConnectionArn: config.codePipeline.githubConnectionArn,
-        repository: config.codePipeline.repository,
-        branchName: config.codePipeline.branch,
-      },
-    });
+    //todo: add a event subscription,
+    // probably user-merge evnet as its not being sent to snowplow yet?
+    //or pick an existing event for which we have snowplow schema
   }
 
   /**
@@ -133,11 +60,6 @@ class Acme extends TerraformStack {
    * @private
    */
   private createPagerDuty() {
-    // don't create any pagerduty resources if in dev
-    if (config.isDev) {
-      return undefined;
-    }
-
     const incidentManagement = new DataTerraformRemoteState(
       this,
       'incident_management',
@@ -152,159 +74,17 @@ class Acme extends TerraformStack {
     return new PocketPagerDuty(this, 'pagerduty', {
       prefix: config.prefix,
       service: {
-        criticalEscalationPolicyId: incidentManagement.get(
-          'policy_backend_critical_id'
-        ),
-        nonCriticalEscalationPolicyId: incidentManagement.get(
-          'policy_backend_non_critical_id'
-        ),
-      },
-    });
-  }
-
-  private createPocketAlbApplication(dependencies: {
-    pagerDuty: PocketPagerDuty;
-    region: DataAwsRegion;
-    caller: DataAwsCallerIdentity;
-    secretsManagerKmsAlias: DataAwsKmsAlias;
-    snsTopic: DataAwsSnsTopic;
-    cache: { primaryEndpoint: string; readerEndpoint: string };
-  }): PocketALBApplication {
-    const {
-      pagerDuty,
-      region,
-      caller,
-      secretsManagerKmsAlias,
-      snsTopic,
-      cache,
-    } = dependencies;
-
-    return new PocketALBApplication(this, 'application', {
-      internal: true,
-      prefix: config.prefix,
-      alb6CharacterPrefix: config.shortName,
-      tags: config.tags,
-      cdn: false,
-      domain: config.domain,
-      containerConfigs: [
-        {
-          name: 'app',
-          portMappings: [
-            {
-              hostPort: 4005,
-              containerPort: 4005,
-            },
-          ],
-          healthCheck: config.healthCheck,
-          envVars: [
-            {
-              name: 'NODE_ENV',
-              value: process.env.NODE_ENV,
-            },
-            {
-              name: 'ENVIRONMENT',
-              value: process.env.NODE_ENV, // this gives us a nice lowercase production and development
-            },
-            {
-              name: 'REDIS_PRIMARY_ENDPOINT',
-              value: cache.primaryEndpoint,
-            },
-            {
-              name: 'REDIS_READER_ENDPOINT',
-              value: cache.readerEndpoint,
-            },
-          ],
-          secretEnvVars: [
-            {
-              name: 'SENTRY_DSN',
-              valueFrom: `arn:aws:ssm:${region.name}:${caller.accountId}:parameter/${config.name}/${config.environment}/SENTRY_DSN`,
-            },
-          ],
-        },
-        {
-          name: 'xray-daemon',
-          containerImage: 'public.ecr.aws/xray/aws-xray-daemon:latest',
-          portMappings: [
-            {
-              hostPort: 2000,
-              containerPort: 2000,
-              protocol: 'udp',
-            },
-          ],
-          command: ['--region', 'us-east-1', '--local-mode'],
-        },
-      ],
-      codeDeploy: {
-        useCodeDeploy: true,
-        useCodePipeline: true,
-        snsNotificationTopicArn: snsTopic.arn,
-      },
-      exposedContainer: {
-        name: 'app',
-        port: 4001,
-        healthCheckPath: '/.well-known/apollo/server-health',
-      },
-      ecsIamConfig: {
-        prefix: config.prefix,
-        taskExecutionRolePolicyStatements: [
-          //This policy could probably go in the shared module in the future.
-          {
-            actions: ['secretsmanager:GetSecretValue', 'kms:Decrypt'],
-            resources: [
-              `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:Shared`,
-              `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:Shared/*`,
-              secretsManagerKmsAlias.targetKeyArn,
-              `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.name}/${config.environment}`,
-              `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.name}/${config.environment}/*`,
-              `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.prefix}`,
-              `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.prefix}/*`,
-            ],
-            effect: 'Allow',
-          },
-          //This policy could probably go in the shared module in the future.
-          {
-            actions: ['ssm:GetParameter*'],
-            resources: [
-              `arn:aws:ssm:${region.name}:${caller.accountId}:parameter/${config.name}/${config.environment}`,
-              `arn:aws:ssm:${region.name}:${caller.accountId}:parameter/${config.name}/${config.environment}/*`,
-            ],
-            effect: 'Allow',
-          },
-        ],
-        taskRolePolicyStatements: [
-          {
-            actions: [
-              'xray:PutTraceSegments',
-              'xray:PutTelemetryRecords',
-              'xray:GetSamplingRules',
-              'xray:GetSamplingTargets',
-              'xray:GetSamplingStatisticSummaries',
-            ],
-            resources: ['*'],
-            effect: 'Allow',
-          },
-        ],
-        taskExecutionDefaultAttachmentArn:
-          'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
-      },
-      autoscalingConfig: {
-        targetMinCapacity: 2,
-        targetMaxCapacity: 10,
-      },
-      alarms: {
-        //TODO: When you start using the service add the pagerduty arns as an action `pagerDuty.snsNonCriticalAlarmTopic.arn`
-        http5xxErrorPercentage: {
-          threshold: 25,
-          evaluationPeriods: 4,
-          period: 300,
-          actions: config.isDev ? [] : []
-        }
+        criticalEscalationPolicyId: incidentManagement
+          .get('policy_backend_critical_id')
+          .toString(),
+        nonCriticalEscalationPolicyId: incidentManagement
+          .get('policy_backend_non_critical_id')
+          .toString(),
       },
     });
   }
 }
 
 const app = new App();
-new Acme(app, 'acme');
-// TODO: Fix the terraform version. @See https://github.com/Pocket/recommendation-api/pull/333
+new SnowplowSharedConsumerStack(app, config.domainPrefix);
 app.synth();
