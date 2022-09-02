@@ -15,6 +15,12 @@ services:
     ports:
       - '6379:6379'
 
+  snowplow:
+    image: pocket/snowplow-micro:latest
+    platform: linux/amd64
+    ports:
+      - '9090:9090'
+
   app:
     image: node:15
     working_dir: /app
