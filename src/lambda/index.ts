@@ -26,7 +26,10 @@ export async function processor(event: any): Promise<any> {
       }
       await eventConsumer[message['source']](record);
     } catch (error) {
-      console.log(error);
+      console.log(
+        error,
+        `failed to process the event -> ${JSON.stringify(record)}`
+      );
       Sentry.captureException(error);
       batchFailures.push({ itemIdentifier: record.messageId });
     }

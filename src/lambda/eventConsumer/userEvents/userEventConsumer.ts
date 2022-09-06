@@ -24,17 +24,17 @@ export async function userEventConsumer(record: SQSRecord) {
   await new UserEventHandler().process(getUserEventPayload(record.body));
 }
 
-export function getUserEventPayload(
-  eventObj: string
-): UserEventPayloadSnowplow {
-  const messageBody: UserEventPayload = JSON.parse(eventObj).Message['detail'];
-  const detailType = JSON.parse(eventObj).Message['detail-type'];
+export function getUserEventPayload(eventObj: any): UserEventPayloadSnowplow {
+  eventObj = JSON.parse(eventObj);
+  const message = JSON.parse(eventObj.Message);
+  const messageBody: UserEventPayload = message['detail'];
+  const detailType = message['detail-type'];
 
   return {
     user: {
       id: messageBody.userId,
       email: messageBody.email,
-      isPremium: messageBody.isPremium,
+      isPremium: messageBody.isPremium ? true : false,
     },
     apiUser: {
       apiId: messageBody.apiId,

@@ -20,7 +20,7 @@ export class EventHandler {
     try {
       await this.tracker.track(event, context);
       console.log(
-        `emitting snowplow event -> ${JSON.stringify(
+        `emitting snowplow event ->${JSON.stringify(
           event
         )} with context -> ${JSON.stringify(context)}`
       );
