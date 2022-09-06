@@ -4,7 +4,10 @@ shared consumer for consuming from event-bridge and emitting to snowplow
 
 ## Folder structure
 - the infrastructure code is present in `.aws`
-- the application code is in `src`
+  - to add a new event, add the sns subscription of the event to the `sqsConsumerLambda`
+- the application code is in `src/lambda`
+  - the `eventConsumer` contains logic to consume from event-bridge and transform them to snowplow
+  - the `snowplow` folder contains handlers to send events to snowplow
 - `.docker` contains local setup
 - `.circleci` contains circleCI setup
 
