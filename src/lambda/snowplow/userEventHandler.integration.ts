@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
 import config from '../config';
-import { ObjectUpdate, EventType, UserEventPayloadSnowplow } from './types';
+import { ObjectUpdate, EventType } from './types';
 import { UserEventHandler } from './userEventHandler';
 
 async function snowplowRequest(path: string, post = false): Promise<any> {
@@ -89,7 +89,7 @@ const testAccountData = {
   id: '1',
   hashedId: 'test_hashed_user_id',
   email: 'test@pocket.com',
-  isPremium: true
+  isPremium: true,
 };
 
 const testEventData = {
@@ -132,7 +132,6 @@ describe('SnowplowHandler', () => {
   });
 
   it('should send update email event to snowplow', async () => {
-
     await new UserEventHandler().process({
       ...testEventData,
       eventType: EventType.ACCOUNT_EMAIL_UPDATED,

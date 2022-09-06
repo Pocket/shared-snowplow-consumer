@@ -1,17 +1,17 @@
 import * as Sentry from '@sentry/serverless';
 import { SQSBatchItemFailure, SQSRecord } from 'aws-lambda';
-import {accountDeleteHandler} from './handlers/userEvents/accountDeleteHandler';
+import { userEventConsumer } from './eventConsumer/userEvents/userEventConsumer';
 
 //add event type as `source` from event-bridge
-export enum EventType  {
-  USER_EVENT = 'user-event'
+export enum EventType {
+  USER_EVENT = 'user-event',
 }
 // Mapping of detail-type (via event bridge message)
 // to function that should be invoked to process the message
-export const handlers: {
+export const eventConsumer: {
   [key: string]: (message: SQSRecord) => Promise<void>;
 } = {
-  [EventType.USER_EVENT]: accountDeleteHandler,
+  [EventType.USER_EVENT]: userEventConsumer,
 };
 
 export async function processor(event: any): Promise<any> {
@@ -19,12 +19,12 @@ export async function processor(event: any): Promise<any> {
   for await (const record of event.Records) {
     try {
       const message = JSON.parse(JSON.parse(record.body).Message);
-      if (handlers[message['source']] == null) {
+      if (eventConsumer[message['source']] == null) {
         throw new Error(
           `Unable to retrieve handler for source='${message['source']}'`
         );
       }
-      await handlers[message['source']](record);
+      await eventConsumer[message['source']](record);
     } catch (error) {
       console.log(error);
       Sentry.captureException(error);

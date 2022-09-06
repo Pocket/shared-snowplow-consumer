@@ -3,7 +3,7 @@ import { SelfDescribingJson } from '@snowplow/tracker-core';
 import { EventType, SnowplowEventMap, UserEventPayloadSnowplow } from './types';
 import { Account, ApiUser, ObjectUpdate, User } from './types';
 import config from '../config';
-import { EventHandler } from '../handlers/EventHandler';
+import { EventHandler } from '../eventConsumer/EventHandler';
 import { tracker } from './tracker';
 
 type ObjectUpdateEvent = Omit<SelfDescribingJson, 'data'> & {
@@ -28,7 +28,7 @@ type ApiUserContext = Omit<SelfDescribingJson, 'data'> & {
  */
 export class UserEventHandler extends EventHandler {
   constructor() {
-    super(tracker)
+    super(tracker);
     return this;
   }
 
@@ -102,7 +102,9 @@ export class UserEventHandler extends EventHandler {
     return context;
   }
 
-  private static generateUserContext(data: UserEventPayloadSnowplow): UserContext {
+  private static generateUserContext(
+    data: UserEventPayloadSnowplow
+  ): UserContext {
     return {
       schema: config.snowplow.schemas.user,
       data: {

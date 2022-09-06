@@ -1,4 +1,3 @@
-
 export type Account = {
   object_version: 'new';
   user_id: number;
@@ -29,7 +28,7 @@ export type ApiUser = {
 
 export enum EventType {
   ACCOUNT_DELETE = 'ACCOUNT_DELETE',
-  ACCOUNT_EMAIL_UPDATED = 'ACCOUNT_EMAIL_UPDATED'
+  ACCOUNT_EMAIL_UPDATED = 'ACCOUNT_EMAIL_UPDATED',
 }
 
 export type BasicUserEventPayloadWithContext = {
@@ -68,6 +67,3 @@ export const SnowplowEventMap: Record<EventTypeString, SnowplowEventType> = {
   ACCOUNT_DELETE: 'account_delete',
   ACCOUNT_EMAIL_UPDATED: 'account_email_updated',
 };
-
-
-
