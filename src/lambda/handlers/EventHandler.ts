@@ -25,6 +25,7 @@ export class EventHandler {
   ): Promise<void> {
     try {
       await this.tracker.track(event, context);
+      console.log(`emitting snowplow event -> ${JSON.stringify(event)} with context -> ${JSON.stringify(context)}`)
     } catch (ex) {
       const message = `Failed to send event to snowplow.\n event: ${event}\n context: ${context}`;
       console.log(message);
