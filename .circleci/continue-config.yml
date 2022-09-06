@@ -54,18 +54,11 @@ jobs:
           - NODE_ENV=test
           - AWS_XRAY_LOG_LEVEL=silent
           - AWS_XRAY_CONTEXT_MISSING=LOG_ERROR
-      # localstack
-      - image: localstack/localstack@sha256:3d462457a7e069541eeff15e6714bfe14861997d52ab6025ee13b1bf9f1a8f82
+      #snowplow
+      - image: pocket/snowplow-micro:dev
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
-        environment:
-          DEBUG: 1
-          SERVICES: dynamodb
-          DATA_DIR: /tmp/localstack/data
-          EXTRA_CORS_ALLOWED_HEADERS: Content-Disposition, Content-Type, x-amz-acl
-          EXTRA_CORS_EXPOSE_HEADERS: ETag
-          HOSTNAME_EXTERNAL: localstack
     steps:
       - checkout
       - restore_cache:
@@ -219,10 +212,12 @@ workflows:
     when: << pipeline.parameters.run-build-deploy-events-lambda-job >>
     jobs:
       - test_specs:
+          context: pocket
           path: src/lambda
           name: test_specs_events
 
       - test_integrations:
+          context: pocket
           path: src/lambda
           name: test_integrations_events
 

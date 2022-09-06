@@ -8,7 +8,8 @@ import {
 import {
   AwsProvider,
   iam,
-  datasources
+  datasources,
+  sqs
 } from '@cdktf/provider-aws';
 import { config } from './config';
 import {
@@ -50,9 +51,26 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       pagerDuty,
     });
 
-    //todo: add a event subscription,
-    // probably user-merge evnet as its not being sent to snowplow yet?
-    //or pick an existing event for which we have snowplow schema
+    const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
+    this.subscribeSqsToSnsTopic(sqsEventLambda, userEventTopicArn);
+  }
+
+  private subscribeSqsToSnsTopic(
+    sqsLambda: SQSConsumerLambda,
+    snsTopicArn: string
+  ) {
+    // Subscribe to SNS topic with user-related events
+    // This Topic already exists and is managed elsewhere
+    new ApplicationSqsSnsTopicSubscription(this, 'user-event-subscription', {
+      name: 'Shared-Snowplow-Consumer-Events',
+      snsTopicArn,
+      sqsQueue: sqsLambda.construct.sqsQueueResource,
+      tags: { environment: config.environment, service: config.name },
+      dependsOn: [
+        sqsLambda.construct.lambda.versionedLambda,
+        sqsLambda.construct.sqsQueueResource as sqs.SqsQueue,
+      ],
+    });
   }
 
   /**

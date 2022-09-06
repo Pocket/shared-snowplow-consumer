@@ -1,11 +1,10 @@
-import * as Sentry from '@sentry/node';
-import { buildSelfDescribingEvent, Tracker } from '@snowplow/node-tracker';
-import { PayloadBuilder, SelfDescribingJson } from '@snowplow/tracker-core';
-import { EventType, SnowplowEventMap, UserEventPayload } from './types';
+import { buildSelfDescribingEvent } from '@snowplow/node-tracker';
+import { SelfDescribingJson } from '@snowplow/tracker-core';
+import { EventType, SnowplowEventMap, UserEventPayloadSnowplow } from './types';
 import { Account, ApiUser, ObjectUpdate, User } from './types';
-import config from '../../config';
-import { EventHandler } from '../EventHandler';
-import { tracker } from '../../snowplow/tracker';
+import config from '../config';
+import { EventHandler } from '../handlers/EventHandler';
+import { tracker } from './tracker';
 
 type ObjectUpdateEvent = Omit<SelfDescribingJson, 'data'> & {
   data: ObjectUpdate;
@@ -27,7 +26,7 @@ type ApiUserContext = Omit<SelfDescribingJson, 'data'> & {
  * This class MUST be initialized using the SnowplowHandler.init() method.
  * This is done to ensure event handlers adhere to the EventHandlerInterface.
  */
-export class UserEventSnowplowHandler extends EventHandler {
+export class UserEventHandler extends EventHandler {
   constructor() {
     super(tracker)
     return this;
@@ -37,12 +36,12 @@ export class UserEventSnowplowHandler extends EventHandler {
    * method to create and process event data
    * @param data
    */
-  async process(data: UserEventPayload): Promise<void> {
+  async process(data: UserEventPayloadSnowplow): Promise<void> {
     this.addRequestInfoToTracker(data);
     const event = buildSelfDescribingEvent({
-      event: UserEventSnowplowHandler.generateAccountUpdateEvent(data),
+      event: UserEventHandler.generateAccountUpdateEvent(data),
     });
-    const context = await UserEventSnowplowHandler.generateEventContext(data);
+    const context = await UserEventHandler.generateEventContext(data);
     await super.track(event, context);
   }
 
@@ -50,7 +49,7 @@ export class UserEventSnowplowHandler extends EventHandler {
    * @private
    */
   private static generateAccountUpdateEvent(
-    data: UserEventPayload
+    data: UserEventPayloadSnowplow
   ): ObjectUpdateEvent {
     return {
       schema: config.snowplow.schemas.objectUpdate,
@@ -65,7 +64,7 @@ export class UserEventSnowplowHandler extends EventHandler {
    * @private to build event context for ACCOUNT_DELETE event.
    */
   private static generateDeleteEventAccountContext(
-    data: UserEventPayload
+    data: UserEventPayloadSnowplow
   ): AccountContext {
     return {
       schema: config.snowplow.schemas.account,
@@ -77,7 +76,7 @@ export class UserEventSnowplowHandler extends EventHandler {
   }
 
   private static generateAccountContext(
-    data: UserEventPayload
+    data: UserEventPayloadSnowplow
   ): AccountContext {
     return {
       schema: config.snowplow.schemas.account,
@@ -90,20 +89,20 @@ export class UserEventSnowplowHandler extends EventHandler {
   }
 
   private static async generateEventContext(
-    data: UserEventPayload
+    data: UserEventPayloadSnowplow
   ): Promise<SelfDescribingJson[]> {
     const context = [
-      UserEventSnowplowHandler.generateUserContext(data),
-      UserEventSnowplowHandler.generateApiUserContext(data),
+      UserEventHandler.generateUserContext(data),
+      UserEventHandler.generateApiUserContext(data),
     ];
 
     data.eventType == EventType.ACCOUNT_DELETE
-      ? context.push(UserEventSnowplowHandler.generateDeleteEventAccountContext(data))
-      : context.push(UserEventSnowplowHandler.generateAccountContext(data));
+      ? context.push(UserEventHandler.generateDeleteEventAccountContext(data))
+      : context.push(UserEventHandler.generateAccountContext(data));
     return context;
   }
 
-  private static generateUserContext(data: UserEventPayload): UserContext {
+  private static generateUserContext(data: UserEventPayloadSnowplow): UserContext {
     return {
       schema: config.snowplow.schemas.user,
       data: {
@@ -117,7 +116,7 @@ export class UserEventSnowplowHandler extends EventHandler {
   }
 
   private static generateApiUserContext(
-    data: UserEventPayload
+    data: UserEventPayloadSnowplow
   ): ApiUserContext {
     return {
       schema: config.snowplow.schemas.apiUser,
@@ -135,7 +134,7 @@ export class UserEventSnowplowHandler extends EventHandler {
    * Updates tracker with request information
    * @private
    */
-  private addRequestInfoToTracker(data: UserEventPayload) {
+  private addRequestInfoToTracker(data: UserEventPayloadSnowplow) {
     this.tracker.setLang(data.request?.language);
     this.tracker.setDomainUserId(data.request?.snowplowDomainUserId); // possibly grab from cookie else grab from context
     this.tracker.setIpAddress(data.request?.ipAddress); // get the remote address from teh x-forwarded-for header
