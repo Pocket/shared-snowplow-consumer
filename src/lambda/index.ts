@@ -4,7 +4,7 @@ import { userEventConsumer } from './eventConsumer/userEvents/userEventConsumer'
 
 //add event type as `source` from event-bridge
 export enum EventType {
-  USER_EVENT = 'user-event',
+  USER_EVENT = 'user-events',
 }
 // Mapping of detail-type (via event bridge message)
 // to function that should be invoked to process the message

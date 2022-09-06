@@ -17,7 +17,7 @@ describe('getUserEventPayload', () => {
 
     const testEventBridgePayload = {
       source: 'user-events',
-      'detail-type': ['account-deletion'],
+      'detail-type': 'account-deletion',
       detail: {
         userId: '1',
         email: 'test@gmail.com',

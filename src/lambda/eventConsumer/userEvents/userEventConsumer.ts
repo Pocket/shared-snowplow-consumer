@@ -17,6 +17,7 @@ export type UserEventPayload = {
 // https://github.com/Pocket/pocket-event-bridge/blob/f462cbb1b166d937fcd62319f88c90efc7653ebc/.aws/src/event-rules/user-api-events/eventConfig.ts#L3
 export const DetailTypeToSnowplowMap: Record<string, EventTypeString> = {
   'account-deletion': 'ACCOUNT_DELETE',
+  'account-email-updated': 'ACCOUNT_EMAIL_UPDATED',
 };
 
 export async function userEventConsumer(record: SQSRecord) {
@@ -27,9 +28,7 @@ export function getUserEventPayload(
   eventObj: string
 ): UserEventPayloadSnowplow {
   const messageBody: UserEventPayload = JSON.parse(eventObj).Message['detail'];
-
-  //detail-type is an array
-  const detailType = JSON.parse(eventObj).Message['detail-type'][0];
+  const detailType = JSON.parse(eventObj).Message['detail-type'];
 
   return {
     user: {
