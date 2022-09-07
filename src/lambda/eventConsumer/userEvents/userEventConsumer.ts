@@ -36,33 +36,36 @@ export async function userEventConsumer(record: SQSRecord) {
 }
 
 export function getUserEventPayload(eventObj: any): UserEventPayloadSnowplow {
-  console.log(eventObj)
   eventObj = JSON.parse(eventObj);
   const message = JSON.parse(eventObj.Message);
   const messageBody: UserEventPayload = message['detail'];
   const detailType = message['detail-type'];
 
-  return   {
+  return {
     user: {
       id: messageBody.userId,
       email: messageBody.email,
-      isPremium: messageBody.isPremium ? true : false, //set as 0
-      hashedId: messageBody.hashedId,
-      guid: messageBody.guid,
-      hashedGuid: messageBody.hashedGuid,
+      isPremium: messageBody.isPremium ? true : false, //set as 0 in payload
+      ...(messageBody.hashedId ? { hashedId: messageBody.hashedId } : {}),
+      ...(messageBody.guid ? { guid: messageBody.guid } : {}),
+      ...(messageBody.hashedGuid ? { hashedGuid: messageBody.hashedGuid } : {}),
     },
     apiUser: {
       apiId: messageBody.apiId,
-      name: messageBody.name,
-      isNative: messageBody.isNative,
-      isTrusted: messageBody.isTrusted,
-      clientVersion: messageBody.clientVersion,
+      ...(messageBody.name ? { name: messageBody.name } : {}),
+      ...(messageBody.isNative ? { isNative: messageBody.isNative } : {}),
+      ...(messageBody.isTrusted ? { isTrusted: messageBody.isTrusted } : {}),
+      ...(messageBody.clientVersion
+        ? { clientVersion: messageBody.clientVersion }
+        : {}),
     },
     request: {
-      language:messageBody.language,
-      snowplowDomainUserId: messageBody.snowplowDomainUserId,
-      ipAddress:messageBody.ipAddress,
-      userAgent: messageBody.userAgent
+      ...(messageBody.language ? { language: messageBody.language } : {}),
+      ...(messageBody.snowplowDomainUserId
+        ? { snowplowDomainUserId: messageBody.snowplowDomainUserId }
+        : {}),
+      ...(messageBody.ipAddress ? { ipAddress: messageBody.ipAddress } : {}),
+      ...(messageBody.userAgent ? { userAgent: messageBody.userAgent } : {}),
     },
     eventType: DetailTypeToSnowplowMap[detailType],
   };
