@@ -7,9 +7,20 @@ import { SQSRecord } from 'aws-lambda';
 
 export type UserEventPayload = {
   userId: string;
-  email?: string;
+  email: string;
   isPremium?: boolean;
   apiId: string;
+  hashedId?: string;
+  guid?: number;
+  hashedGuid?: string;
+  name?: string;
+  isNative?: boolean;
+  isTrusted?: boolean;
+  clientVersion?: string;
+  language?: string;
+  snowplowDomainUserId?: string;
+  ipAddress?: string;
+  userAgent?: string;
 };
 
 //detail-type in event rule
@@ -30,15 +41,28 @@ export function getUserEventPayload(eventObj: any): UserEventPayloadSnowplow {
   const messageBody: UserEventPayload = message['detail'];
   const detailType = message['detail-type'];
 
-  return {
+  return   {
     user: {
       id: messageBody.userId,
       email: messageBody.email,
       isPremium: messageBody.isPremium ? true : false,
+      ...(messageBody.hashedId ? { hashedId: messageBody.hashedId } : {}),
+      ...(messageBody.guid ? { guid: messageBody.guid } : {}),
+      ...(messageBody.hashedGuid ? { hashedGuid: messageBody.hashedGuid } : {}),
     },
     apiUser: {
       apiId: messageBody.apiId,
+      ...(messageBody.name ? { name: messageBody.name } : {}),
+      ...(messageBody.isNative ? { isNative: messageBody.isNative } : {}),
+      ...(messageBody.isTrusted ? { isTrusted: messageBody.isTrusted } : {}),
+      ...(messageBody.clientVersion ? { clientVersion: messageBody.clientVersion } : {}),
     },
+    // request: {
+    //   language:messageBody.language,
+    //   snowplowDomainUserId: messageBody.snowplowDomainUserId,
+    //   ipAddress:messageBody.ipAddress,
+    //   userAgent: messageBody.userAgent
+    // },
     eventType: DetailTypeToSnowplowMap[detailType],
   };
 }
