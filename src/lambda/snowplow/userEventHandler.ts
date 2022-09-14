@@ -23,8 +23,7 @@ type ApiUserContext = Omit<SelfDescribingJson, 'data'> & {
 };
 
 /**
- * This class MUST be initialized using the SnowplowHandler.init() method.
- * This is done to ensure event handlers adhere to the EventHandlerInterface.
+ * class to send `user-event` to snowplow
  */
 export class UserEventHandler extends EventHandler {
   constructor() {
@@ -41,7 +40,7 @@ export class UserEventHandler extends EventHandler {
     const event = buildSelfDescribingEvent({
       event: UserEventHandler.generateAccountUpdateEvent(data),
     });
-    const context = await UserEventHandler.generateEventContext(data);
+    const context = UserEventHandler.generateEventContext(data);
     await super.track(event, context);
   }
 
@@ -88,9 +87,9 @@ export class UserEventHandler extends EventHandler {
     };
   }
 
-  private static async generateEventContext(
+  private static generateEventContext(
     data: UserEventPayloadSnowplow
-  ): Promise<SelfDescribingJson[]> {
+  ): SelfDescribingJson[] {
     const context = [
       UserEventHandler.generateUserContext(data),
       UserEventHandler.generateApiUserContext(data),
