@@ -8,8 +8,10 @@ import {
 import {
   AwsProvider,
   iam,
+  kms,
+  sns,
   datasources,
-  sqs
+  sqs,
 } from '@cdktf/provider-aws';
 import { config } from './config';
 import {
@@ -22,6 +24,10 @@ import { LocalProvider } from '@cdktf/provider-local';
 import { ArchiveProvider } from '@cdktf/provider-archive';
 import { NullProvider } from '@cdktf/provider-null';
 import { SQSConsumerLambda } from './sqsConsumerLambda';
+import {
+  SharedSnowplowConsumerApp,
+  SharedSnowplowConsumerProps,
+} from './sharedSnowplowConsumerApp';
 
 class SnowplowSharedConsumerStack extends TerraformStack {
   constructor(scope: Construct, private name: string) {
@@ -53,6 +59,40 @@ class SnowplowSharedConsumerStack extends TerraformStack {
 
     const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
     this.subscribeSqsToSnsTopic(sqsEventLambda, userEventTopicArn);
+
+    const appProps: SharedSnowplowConsumerProps = {
+      pagerDuty: pagerDuty,
+      region: region,
+      caller: caller,
+      secretsManagerKmsAlias: this.getSecretsManagerKmsAlias(),
+      snsTopic: this.getCodeDeploySnsTopic(),
+    };
+
+    new SharedSnowplowConsumerApp(
+      this,
+      'shared-snowplow-consumer-app',
+      appProps
+    );
+  }
+
+  /**
+   * Get the sns topic for code deploy
+   * @private
+   */
+  private getCodeDeploySnsTopic() {
+    return new sns.DataAwsSnsTopic(this, 'backend_notifications', {
+      name: `Backend-${config.environment}-ChatBot`,
+    });
+  }
+
+  /**
+   * Get secrets manager kms alias
+   * @private
+   */
+  private getSecretsManagerKmsAlias() {
+    return new kms.DataAwsKmsAlias(this, 'kms_alias', {
+      name: 'alias/aws/secretsmanager',
+    });
   }
 
   private subscribeSqsToSnsTopic(

@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
-import config from '../config';
+import { config } from '../config';
 import { ObjectUpdate, EventType } from './types';
 import { UserEventHandler } from './userEventHandler';
 
