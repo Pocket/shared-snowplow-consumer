@@ -3,7 +3,6 @@ import {
   EventTypeString,
   UserEventPayloadSnowplow,
 } from '../../snowplow/types';
-import { SQSRecord } from 'aws-lambda';
 
 export type UserEventPayload = {
   userId: string;
@@ -31,7 +30,7 @@ export const DetailTypeToSnowplowMap: Record<string, EventTypeString> = {
   'account-email-updated': 'ACCOUNT_EMAIL_UPDATED',
 };
 
-export async function userEventConsumer(record: SQSRecord) {
+export async function userEventConsumer(record: any) {
   await new UserEventHandler().process(getUserEventPayload(record.body));
 }
 

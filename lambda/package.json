@@ -1,19 +1,12 @@
 {
-  "name": "snowplow-shared-consumer",
+  "name": "snowplow-shared-consumer-lambda",
   "version": "1.0.0",
   "description": "",
   "main": "dist/main.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "watch": "tsc -w & nodemon",
-    "start": "node dist/main.js",
-    "start:dev": "npm run build && npm run watch",
-    "test-ci": "npm test",
-    "test:watch": "npm test -- --watchAll",
     "test": "jest \"\\.spec\\.ts\"",
-    "test-integrations": "jest \"\\.integration\\.ts\" --forceExit",
-    "lint-check": "eslint --fix-dry-run \"src/**/*.ts\"",
-    "lint-fix": "eslint --fix \"src/**/*.ts\""
+    "test-integrations": "jest \"\\.integration\\.ts\" --runInBand"
   },
   "repository": {
     "type": "git",
@@ -31,6 +24,7 @@
     "@snowplow/node-tracker": "3.1.6",
     "aws-lambda": "1.0.7",
     "aws-xray-sdk-express": "^3.3.7",
+    "nanoid": "^3.3.4",
     "typescript": "^4.8.2"
   },
   "devDependencies": {

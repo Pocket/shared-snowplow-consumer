@@ -1,5 +1,22 @@
 version: '3.1'
 services:
+  app:
+    image: node:16@sha256:b35e76ba744a975b9a5428b6c3cde1a1cf0be53b246e1e9a4874f87034222b5a
+    platform: linux/amd64
+    working_dir: /app
+    ports:
+      - '4015:4015'
+    volumes:
+      - ./:/app
+    env_file:
+      - .docker/local.env
+      - .env
+    environment:
+      - NODE_ENV=local
+    entrypoint: ./.docker/scripts/local-start.sh
+    depends_on:
+      - snowplow
+
   snowplow:
     image: pocket/snowplow-micro:latest
     platform: linux/amd64
