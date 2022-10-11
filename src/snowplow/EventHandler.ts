@@ -21,7 +21,7 @@ export class EventHandler {
       await this.tracker.track(event, context);
       console.log(
         `emitting snowplow event ->${JSON.stringify(
-          event
+          event.getJson()
         )} with context -> ${JSON.stringify(context)}`
       );
     } catch (ex) {

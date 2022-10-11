@@ -4,26 +4,26 @@ import { eventConsumer } from '../eventConsumer';
 
 const router = Router();
 
-router.post(
-  '/',
-  (req, res) => {
+//todo: validate schema
+router.post('/', (req, res) => {
+  console.log(`received messageBody -> ${JSON.stringify(req.body)}`);
+  const requestId = req.body.id ?? nanoid();
+  const detailType = req.body['detail-type'];
 
-      const requestId = req.body.traceId ?? nanoid();
-      const source = req.body.source;
+  if (eventConsumer[detailType] == null) {
+    throw new Error(
+      `Unable to retrieve handler for detailType='${detailType}'`
+    );
+  }
 
-      if (eventConsumer[source] == null) {
-        throw new Error(
-          `Unable to retrieve handler for source='${source}'`
-        );
-      }
-      eventConsumer[source](req.body);
-      return res.send({
-        status: 'OK',
-        message: `processing event ${JSON.stringify(
-          req.body
-        )} (requestId='${requestId}')`,
-      });
-    }
-);
+  eventConsumer[detailType](req.body);
+
+  return res.send({
+    status: 'OK',
+    message: `processing event ${JSON.stringify(
+      req.body
+    )} (requestId='${requestId}')`,
+  });
+});
 
 export default router;

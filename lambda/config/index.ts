@@ -3,9 +3,7 @@ export const config = {
     name: 'sendSnowplowEvent',
     environment: process.env.NODE_ENV,
   },
-  endpoint:
-    process.env.SHARED_SNOWPLOW_CONSUMER ||
-    'https://shared-snowplow-consumer.getpocket.dev',
+  endpoint: process.env.ECS_ENDPOINT || 'http://localhost:4015',
   sendEventPath: '/sendEvent',
   sentry: {
     // these values are inserted into the environment in

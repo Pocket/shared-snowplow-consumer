@@ -26,6 +26,7 @@ export type ApiUser = {
   client_version?: string;
 };
 
+//snowplow event type
 export enum EventType {
   ACCOUNT_DELETE = 'ACCOUNT_DELETE',
   ACCOUNT_EMAIL_UPDATED = 'ACCOUNT_EMAIL_UPDATED',

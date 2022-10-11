@@ -19,7 +19,7 @@ const cacheSize = isDev ? 'cache.t2.micro' : 'cache.t3.medium';
 //   ? 'com-getpocket-prod1.mini.snplow.net'
 //   : 'com-getpocket-prod1.collector.snplow.net';
 //todo: send to prod after disconnecting existing data from user-api
-const snowplowEndpoint = 'com-getpocket-prod1.mini.snplow.net'
+const snowplowEndpoint = 'com-getpocket-prod1.mini.snplow.net';
 
 export const config = {
   name,
@@ -57,6 +57,7 @@ export const config = {
     userTopic: 'UserEventTopic',
   },
   envVars: {
-    snowplowEndpoint: snowplowEndpoint
-  }
+    snowplowEndpoint: snowplowEndpoint,
+    ecsEndpoint: `https://${domain}`,
+  },
 };
