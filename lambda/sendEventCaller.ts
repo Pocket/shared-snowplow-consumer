@@ -33,5 +33,6 @@ async function postRequest(
 }
 
 export async function callSendEventEndpoint(body: any): Promise<any> {
+  //todo: throw error for anything other than 2xx so we can log the message in DLQ
   return postRequest(body, config.sendEventPath, config.endpoint);
 }
