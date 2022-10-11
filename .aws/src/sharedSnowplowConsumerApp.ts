@@ -158,11 +158,9 @@ export class SharedSnowplowConsumerApp extends Resource {
         taskExecutionDefaultAttachmentArn:
           'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
       },
-      //limiting to one ecs task
-      //we don't want multiple task to delete from database
       autoscalingConfig: {
         targetMinCapacity: 1,
-        targetMaxCapacity: 1,
+        targetMaxCapacity: 5,
       },
       alarms: {
         http5xxErrorPercentage: {

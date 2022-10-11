@@ -30,41 +30,40 @@ export const DetailTypeToSnowplowMap: Record<string, EventTypeString> = {
   'account-email-updated': 'ACCOUNT_EMAIL_UPDATED',
 };
 
-export async function userEventConsumer(record: any) {
-  await new UserEventHandler().process(getUserEventPayload(record.body));
+export async function userEventConsumer(requestBody: any) {
+  console.log(`requestBody -> ${JSON.stringify(requestBody)}`);
+  await new UserEventHandler().process(getUserEventPayload(requestBody));
 }
 
+/**
+ * converts the event-bridge event format to snowplow payload
+ * @param eventObj event bridge event format
+ */
 export function getUserEventPayload(eventObj: any): UserEventPayloadSnowplow {
-  eventObj = JSON.parse(eventObj);
-  const message = JSON.parse(eventObj.Message);
-  const messageBody: UserEventPayload = message['detail'];
-  const detailType = message['detail-type'];
+  const eventPayload: UserEventPayload = eventObj['detail'];
+  const detailType = eventObj['detail-type'];
 
   return {
     user: {
-      id: messageBody.userId,
-      email: messageBody.email,
-      isPremium: messageBody.isPremium ? true : false, //set as 0 in payload
-      ...(messageBody.hashedId ? { hashedId: messageBody.hashedId } : {}),
-      ...(messageBody.guid ? { guid: messageBody.guid } : {}),
-      ...(messageBody.hashedGuid ? { hashedGuid: messageBody.hashedGuid } : {}),
+      id: eventPayload.userId,
+      email: eventPayload.email,
+      isPremium: eventPayload.isPremium ? true : false, //set as 0 in dev payload
+      hashedId: eventPayload.hashedId,
+      guid: eventPayload.guid,
+      hashedGuid: eventPayload.hashedGuid,
     },
     apiUser: {
-      apiId: messageBody.apiId,
-      ...(messageBody.name ? { name: messageBody.name } : {}),
-      ...(messageBody.isNative ? { isNative: messageBody.isNative } : {}),
-      ...(messageBody.isTrusted ? { isTrusted: messageBody.isTrusted } : {}),
-      ...(messageBody.clientVersion
-        ? { clientVersion: messageBody.clientVersion }
-        : {}),
+      apiId: eventPayload.apiId,
+      name: eventPayload.name,
+      isNative: eventPayload.isNative,
+      isTrusted: eventPayload.isTrusted,
+      clientVersion: eventPayload.clientVersion,
     },
     request: {
-      ...(messageBody.language ? { language: messageBody.language } : {}),
-      ...(messageBody.snowplowDomainUserId
-        ? { snowplowDomainUserId: messageBody.snowplowDomainUserId }
-        : {}),
-      ...(messageBody.ipAddress ? { ipAddress: messageBody.ipAddress } : {}),
-      ...(messageBody.userAgent ? { userAgent: messageBody.userAgent } : {}),
+      language: eventPayload.language,
+      snowplowDomainUserId: eventPayload.snowplowDomainUserId,
+      ipAddress: eventPayload.ipAddress,
+      userAgent: eventPayload.userAgent,
     },
     eventType: DetailTypeToSnowplowMap[detailType],
   };

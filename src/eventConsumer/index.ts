@@ -1,13 +1,16 @@
-//add event type as `source` from event-bridge
 import { userEventConsumer } from './userEvents/userEventConsumer';
 
+//add detail-type of the events from the event-bridge payload
 export enum EventType {
-  USER_EVENT = 'user-events',
+  ACCOUNT_DELETION = 'account-deletion',
+  ACCOUNT_EMAIL_UPDATED = 'account-email-updated',
 }
-// Mapping of source (via event bridge message)
+
+// Mapping of detail-type (via event bridge message)
 // to function that should be invoked to process the message
 export const eventConsumer: {
   [key: string]: (message: any) => Promise<void>;
 } = {
-  [EventType.USER_EVENT]: userEventConsumer,
+  [EventType.ACCOUNT_DELETION]: userEventConsumer,
+  [EventType.ACCOUNT_EMAIL_UPDATED]: userEventConsumer,
 };

@@ -1,6 +1,4 @@
-import {
-  PocketSQSWithLambdaTarget,
-} from '@pocket-tools/terraform-modules';
+import { PocketSQSWithLambdaTarget } from '@pocket-tools/terraform-modules';
 import { Resource } from 'cdktf';
 import { Construct } from 'constructs';
 import { config as stackConfig } from './config';
@@ -42,7 +40,7 @@ export class SQSConsumerLambda extends Resource {
           GIT_SHA: gitSha,
           ENVIRONMENT:
             stackConfig.environment === 'Prod' ? 'production' : 'development',
-          SNOWPLOW_URL: stackConfig.envVars.snowplowEndpoint
+          ECS_ENDPOINT: stackConfig.envVars.ecsEndpoint,
         },
         vpcConfig: {
           securityGroupIds: config.vpc.defaultSecurityGroups.ids,

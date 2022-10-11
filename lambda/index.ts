@@ -1,13 +1,14 @@
 import * as Sentry from '@sentry/serverless';
-import { SQSBatchItemFailure, SQSRecord } from 'aws-lambda';
+import { SQSBatchItemFailure } from 'aws-lambda';
+import { callSendEventEndpoint } from './sendEventCaller';
 
 export async function processor(event: any): Promise<any> {
   const batchFailures: SQSBatchItemFailure[] = [];
   for await (const record of event.Records) {
     try {
-      //todo: blind-forward to ecs.
-      const message = JSON.parse(JSON.parse(record.body).Message);
-      console.log(`message received -> ${JSON.stringify(message)}`);
+      const requestBody = JSON.parse(JSON.parse(record.body).Message);
+      console.log(`message received -> ${JSON.stringify(requestBody)}`);
+      await callSendEventEndpoint(requestBody);
     } catch (error) {
       console.log(
         error,
