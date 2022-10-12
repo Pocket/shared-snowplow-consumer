@@ -3,4 +3,11 @@
 set -e
 
 dir=$(dirname "$0")
-# todo: add snowplow
+while [[ "$1" ]]; do
+   case "$1" in
+      --hosts)
+          "${dir}"/setup_hosts.sh
+          ;;
+    esac
+    shift
+done
