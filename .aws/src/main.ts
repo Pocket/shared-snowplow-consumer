@@ -60,7 +60,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     });
 
     //dlq for sqs-sns subscription
-    const snsTopicDlq = new sqs.SqsQueue(this, 'sns-topic-dql', {
+    const snsTopicDlq = new sqs.SqsQueue(this, 'sns-topic-dlq', {
       name: `${config.prefix}-SNS-Topics-DLQ`,
       tags: config.tags,
     });
