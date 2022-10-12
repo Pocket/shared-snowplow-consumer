@@ -15,6 +15,12 @@ const branch = isDev ? 'dev' : 'main';
 const cacheNodes = isDev ? 2 : 2;
 const cacheSize = isDev ? 'cache.t2.micro' : 'cache.t3.medium';
 
+// const snowplowEndpoint = isDev
+//   ? 'com-getpocket-prod1.mini.snplow.net'
+//   : 'com-getpocket-prod1.collector.snplow.net';
+//todo: send to prod after disconnecting existing data from user-api
+const snowplowEndpoint = 'com-getpocket-prod1.mini.snplow.net';
+
 export const config = {
   name,
   isDev,
@@ -45,5 +51,13 @@ export const config = {
   tags: {
     service: name,
     environment,
+  },
+  eventBridge: {
+    prefix: 'PocketEventBridge',
+    userTopic: 'UserEventTopic',
+  },
+  envVars: {
+    snowplowEndpoint: snowplowEndpoint,
+    ecsEndpoint: `https://${domain}`,
   },
 };

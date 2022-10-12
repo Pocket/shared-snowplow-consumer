@@ -1,6 +1,4 @@
-import {
-  PocketSQSWithLambdaTarget,
-} from '@pocket-tools/terraform-modules';
+import { PocketSQSWithLambdaTarget } from '@pocket-tools/terraform-modules';
 import { Resource } from 'cdktf';
 import { Construct } from 'constructs';
 import { config as stackConfig } from './config';
@@ -22,7 +20,7 @@ export class SQSConsumerLambda extends Resource {
   constructor(scope: Construct, name: string, config: SqsLambdaProps) {
     super(scope, name.toLowerCase());
 
-    const { sentryDsn, gitSha, snowplowUrl } = this.getEnvVariableValues();
+    const { sentryDsn, gitSha } = this.getEnvVariableValues();
 
     this.construct = new PocketSQSWithLambdaTarget(this, name.toLowerCase(), {
       name: `${stackConfig.prefix}-${name}`,
@@ -42,7 +40,7 @@ export class SQSConsumerLambda extends Resource {
           GIT_SHA: gitSha,
           ENVIRONMENT:
             stackConfig.environment === 'Prod' ? 'production' : 'development',
-          SNOWPLOW_URL: snowplowUrl
+          ECS_ENDPOINT: stackConfig.envVars.ecsEndpoint,
         },
         vpcConfig: {
           securityGroupIds: config.vpc.defaultSecurityGroups.ids,
@@ -67,11 +65,6 @@ export class SQSConsumerLambda extends Resource {
       name: `${stackConfig.circleCIPrefix}/SERVICE_HASH`,
     });
 
-    const snowplowEndpoint = new ssm.DataAwsSsmParameter(this, 'snowplow-url', {
-      name: `/${stackConfig.name}/${stackConfig.environment}/SNOWPLOW_ENDPOINT`,
-    });
-
-
-    return { sentryDsn: sentryDsn.value, gitSha: serviceHash.value, snowplowUrl: snowplowEndpoint.value };
+    return { sentryDsn: sentryDsn.value, gitSha: serviceHash.value };
   }
 }
