@@ -206,7 +206,6 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       { name: 'shared-snowplow-consumer-sns-sqs', resource: snsTopicQueue },
       { name: 'shared-snowplow-consumer-sns-dlq', resource: snsTopicDlq },
     ].forEach((queue) => {
-      console.log(queue.resource.policy);
       const policy = new iam.DataAwsIamPolicyDocument(
         this,
         `${queue.name}-policy-document`,
