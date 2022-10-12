@@ -18,6 +18,9 @@ export class EventHandler {
     context: SelfDescribingJson[]
   ): Promise<void> {
     try {
+      //Note: the track method doesn't exactly work async
+      //there is an open issue with snowplow library to fix this
+      //we expect the ecs to execute this at some-point
       await this.tracker.track(event, context);
       console.log(
         `emitting snowplow event ->${JSON.stringify(
