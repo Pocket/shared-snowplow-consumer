@@ -1,5 +1,5 @@
 import { getUserEventPayload } from './userEventConsumer';
-import { UserEventPayloadSnowplow } from '../../snowplow/types';
+import { UserEventPayloadSnowplow } from '../../snowplow/user/types';
 
 describe('getUserEventPayload', () => {
   it('should convert req body to UserEventPayload', () => {

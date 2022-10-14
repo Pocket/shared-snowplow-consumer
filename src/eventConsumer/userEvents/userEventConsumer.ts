@@ -1,8 +1,8 @@
-import { UserEventHandler } from '../../snowplow/userEventHandler';
+import { UserEventHandler } from '../../snowplow/user/userEventHandler';
 import {
   EventTypeString,
   UserEventPayloadSnowplow,
-} from '../../snowplow/types';
+} from '../../snowplow/user/types';
 
 export type UserEventPayload = {
   userId: string;

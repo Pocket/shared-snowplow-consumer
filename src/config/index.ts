@@ -1,4 +1,4 @@
-import { EventType } from '../snowplow/types';
+import { EventType } from '../snowplow/user/types';
 
 const awsEnvironments = ['production', 'development'];
 let localAwsEndpoint;
@@ -37,9 +37,10 @@ export const config = {
     events: EventType,
     schemas: {
       account: 'iglu:com.pocket/account/jsonschema/1-0-2',
-      objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-4',
+      objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-9',
       user: 'iglu:com.pocket/user/jsonschema/1-0-0',
       apiUser: 'iglu:com.pocket/api_user/jsonschema/1-0-0',
+      prospect: 'iglu:com.pocket/prospect/jsonschema/1-0-0',
     },
   },
 };

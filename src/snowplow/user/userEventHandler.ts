@@ -2,9 +2,9 @@ import { buildSelfDescribingEvent } from '@snowplow/node-tracker';
 import { SelfDescribingJson } from '@snowplow/tracker-core';
 import { EventType, SnowplowEventMap, UserEventPayloadSnowplow } from './types';
 import { Account, ApiUser, ObjectUpdate, User } from './types';
-import { config } from '../config';
-import { EventHandler } from './EventHandler';
-import { tracker } from './tracker';
+import { config } from '../../config';
+import { EventHandler } from '../EventHandler';
+import { tracker } from '../tracker';
 
 type ObjectUpdateEvent = Omit<SelfDescribingJson, 'data'> & {
   data: ObjectUpdate;

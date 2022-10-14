@@ -21,3 +21,4 @@ export const tracker = snowPlowTracker(
   config.snowplow.appId,
   true
 );
+
