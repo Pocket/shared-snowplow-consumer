@@ -1,5 +1,5 @@
 import { getProspectEventPayload } from './prospectEventConsumer';
-import { ProspectEventPayloadSnowplow, ProspectReviewStatus } from '../../snowplow/prospect/types';
+import { ProspectEventPayloadSnowplow } from '../../snowplow/prospect/types';
 import { testProspectData } from '../../snowplow/prospect/testData';
 
 describe('getProspectEventPayload', () => {

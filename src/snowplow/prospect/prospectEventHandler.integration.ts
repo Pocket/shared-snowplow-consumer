@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
 import { config } from '../../config';
-import { ObjectUpdate, EventType, ProspectReviewStatus } from './types';
+import { ObjectUpdate, EventType } from './types';
 import { ProspectEventHandler } from './prospectEventHandler';
 import { testProspectData } from './testData';
 

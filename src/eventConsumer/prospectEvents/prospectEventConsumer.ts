@@ -1,6 +1,5 @@
 import {
   EventTypeString, Prospect, ProspectEventPayloadSnowplow
-
 } from '../../snowplow/prospect/types';
 import { ProspectEventHandler } from '../../snowplow/prospect/prospectEventHandler';
 

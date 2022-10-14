@@ -31,7 +31,6 @@ export type Prospect = {
   reviewedAt?: number;
 };
 
-
 export type BasicProspectEventPayloadWithContext = {
   object_version: string;
   prospect: Prospect;

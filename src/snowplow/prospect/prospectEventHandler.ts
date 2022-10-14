@@ -38,7 +38,6 @@ type ProspectContext = Omit<SelfDescribingJson, 'data'> & {
   }
 };
 
-
 /**
  * class to send `prospect-event` to snowplow
  */
@@ -112,5 +111,4 @@ export class ProspectEventHandler extends EventHandler {
   ): SelfDescribingJson[] {
     return [ProspectEventHandler.generateReviewedEventAccountContext(data)];
   }
-
 }
