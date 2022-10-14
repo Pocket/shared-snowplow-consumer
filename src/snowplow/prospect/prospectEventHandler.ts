@@ -4,7 +4,7 @@ import {
   ObjectUpdate,
   ProspectEventPayloadSnowplow,
   ProspectReviewStatus,
-  SnowplowEventMap
+  SnowplowEventMap,
 } from './types';
 import { config } from '../../config';
 import { EventHandler } from '../EventHandler';
@@ -35,7 +35,7 @@ type ProspectContext = Omit<SelfDescribingJson, 'data'> & {
     reviewed_by?: string;
     reviewed_at?: number;
     prospect_review_status: ProspectReviewStatus;
-  }
+  };
 };
 
 /**

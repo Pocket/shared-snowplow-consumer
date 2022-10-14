@@ -44,7 +44,6 @@ function assertValidSnowplowObjectUpdateEvents(
   );
 }
 
-
 function assertProspectSchema(eventContext) {
   expect(eventContext.data).to.include.deep.members([
     {
@@ -113,5 +112,4 @@ describe('ProspectEventHandler', () => {
       ['prospect_reviewed']
     );
   });
-
 });

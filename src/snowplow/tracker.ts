@@ -16,11 +16,5 @@ const emitter = gotEmitter(
 );
 
 export function getTracker(appId) {
-  return snowPlowTracker(
-    emitter,
-    null,
-    appId,
-    true
-  );
+  return snowPlowTracker(emitter, null, appId, true);
 }
-

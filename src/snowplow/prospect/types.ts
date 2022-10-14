@@ -38,9 +38,10 @@ export type BasicProspectEventPayloadWithContext = {
 
 export type EventTypeString = keyof typeof EventType;
 
-export type ProspectEventPayloadSnowplow = BasicProspectEventPayloadWithContext & {
-  eventType: EventTypeString;
-};
+export type ProspectEventPayloadSnowplow =
+  BasicProspectEventPayloadWithContext & {
+    eventType: EventTypeString;
+  };
 
 export type SnowplowEventType = 'prospect_reviewed';
 
