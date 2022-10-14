@@ -62,7 +62,7 @@ export type UserEventPayloadSnowplow = BasicUserEventPayloadWithContext & {
   eventType: EventTypeString;
 };
 
-export type SnowplowEventType = 'account_email_updated' | 'account_delete';
+export type SnowplowEventType = 'account_email_updated' | 'account_delete' | 'prospect_reviewed';
 
 export const SnowplowEventMap: Record<EventTypeString, SnowplowEventType> = {
   ACCOUNT_DELETE: 'account_delete',

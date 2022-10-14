@@ -1,8 +1,11 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
-import { config } from '../../config';
-import { ObjectUpdate, EventType } from './types';
-import { UserEventHandler } from './userEventHandler';
+import { config } from '../config';
+import { ObjectUpdate, EventType } from './user/types';
+import { UserEventHandler } from './user/userEventHandler';
+import { ProspectEventHandler } from './prospect/prospectEventHandler';
+import { testProspectData } from './prospect/testData';
+import { assertProspectSchema } from './prospect/prospectEventHandler.integration';
 
 async function snowplowRequest(path: string, post = false): Promise<any> {
   const response = await fetch(`http://${config.snowplow.endpoint}${path}`, {
@@ -29,6 +32,7 @@ function parseSnowplowData(data: string): { [key: string]: any } {
 
 function assertValidSnowplowObjectUpdateEvents(
   events,
+  object,
   triggers: ObjectUpdate['trigger'][]
 ) {
   const parsedEvents = events
@@ -38,7 +42,7 @@ function assertValidSnowplowObjectUpdateEvents(
   expect(parsedEvents).to.include.deep.members(
     triggers.map((trigger) => ({
       schema: config.snowplow.schemas.objectUpdate,
-      data: { trigger: trigger, object: 'account' },
+      data: { trigger: trigger, object: object },
     }))
   );
 }
@@ -99,6 +103,13 @@ const testEventData = {
   apiUser: { apiId: '1' },
 };
 
+const prospectTestEventData = {
+  object_version: 'new',
+  prospect: {
+    ...testProspectData,
+  },
+};
+
 describe('UserEventHandler', () => {
   beforeEach(async () => {
     await resetSnowplowEvents();
@@ -111,7 +122,7 @@ describe('UserEventHandler', () => {
     });
 
     // wait a sec * 3
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // make sure we only have good events
     const allEvents = await getAllSnowplowEvents();
@@ -127,6 +138,7 @@ describe('UserEventHandler', () => {
     assertApiAndUserSchema(eventContext);
     assertValidSnowplowObjectUpdateEvents(
       goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
+      'account',
       ['account_delete']
     );
   });
@@ -154,7 +166,38 @@ describe('UserEventHandler', () => {
     assertAccountSchema(eventContext);
     assertValidSnowplowObjectUpdateEvents(
       goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
+      'account',
       ['account_email_updated']
+    );
+  });
+
+  it('should send prospectEvent to snowplow ', async () => {
+    await resetSnowplowEvents();
+    await new ProspectEventHandler().process({
+      ...prospectTestEventData,
+      eventType: 'PROSPECT_REVIEWED',
+    });
+
+    // wait a sec * 3
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // make sure we only have good events
+    const allEvents = await getAllSnowplowEvents();
+    expect(allEvents.total).to.equal(1);
+    expect(allEvents.good).to.equal(1);
+    expect(allEvents.bad).to.equal(0);
+
+    const goodEvents = await getGoodSnowplowEvents();
+    const eventContext = parseSnowplowData(
+      goodEvents[0].rawEvent.parameters.cx
+    );
+
+    assertProspectSchema(eventContext);
+
+    assertValidSnowplowObjectUpdateEvents(
+      goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
+      'prospect',
+      ['prospect_reviewed']
     );
   });
 });
