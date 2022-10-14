@@ -46,7 +46,7 @@ export const config = {
       //todo: make the event bridge event to send this
       //or convert from event bridge's source
       prospectApi: 'pocket-prospect-api',
-      userApi: 'pocket-user-api'
-    }
+      userApi: 'pocket-user-api',
+    },
   },
 };
