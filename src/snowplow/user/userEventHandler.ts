@@ -4,7 +4,7 @@ import { EventType, SnowplowEventMap, UserEventPayloadSnowplow } from './types';
 import { Account, ApiUser, ObjectUpdate, User } from './types';
 import { config } from '../../config';
 import { EventHandler } from '../EventHandler';
-import { tracker } from '../tracker';
+import { getTracker } from '../tracker';
 
 type ObjectUpdateEvent = Omit<SelfDescribingJson, 'data'> & {
   data: ObjectUpdate;
@@ -27,6 +27,7 @@ type ApiUserContext = Omit<SelfDescribingJson, 'data'> & {
  */
 export class UserEventHandler extends EventHandler {
   constructor() {
+    const tracker = getTracker(config.snowplow.appIds.userApi);
     super(tracker);
     return this;
   }

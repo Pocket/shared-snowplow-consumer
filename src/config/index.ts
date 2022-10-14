@@ -42,5 +42,11 @@ export const config = {
       apiUser: 'iglu:com.pocket/api_user/jsonschema/1-0-0',
       prospect: 'iglu:com.pocket/prospect/jsonschema/1-0-0',
     },
+    appIds: {
+      //todo: make the event bridge event to send this
+      //or convert from event bridge's source
+      prospectApi: 'pocket-prospect-api',
+      userApi: 'pocket-user-api'
+    }
   },
 };

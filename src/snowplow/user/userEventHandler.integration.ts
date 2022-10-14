@@ -99,7 +99,7 @@ const testEventData = {
   apiUser: { apiId: '1' },
 };
 
-describe('SnowplowHandler', () => {
+describe('UserEventHandler', () => {
   beforeEach(async () => {
     await resetSnowplowEvents();
   });

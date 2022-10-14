@@ -34,4 +34,8 @@ export class EventHandler {
       Sentry.captureException(ex);
     }
   }
+
+  public getTracker() {
+
+  }
 }

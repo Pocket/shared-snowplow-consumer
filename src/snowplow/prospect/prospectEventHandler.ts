@@ -8,7 +8,7 @@ import {
 } from './types';
 import { config } from '../../config';
 import { EventHandler } from '../EventHandler';
-import { tracker } from '../tracker';
+import { getTracker } from '../tracker';
 
 type ObjectUpdateEvent = Omit<SelfDescribingJson, 'data'> & {
   data: ObjectUpdate;
@@ -43,6 +43,7 @@ type ProspectContext = Omit<SelfDescribingJson, 'data'> & {
  */
 export class ProspectEventHandler extends EventHandler {
   constructor() {
+    const tracker = getTracker(config.snowplow.appIds.prospectApi);
     super(tracker);
     return this;
   }
@@ -93,7 +94,7 @@ export class ProspectEventHandler extends EventHandler {
         topic: data.prospect.topic,
         is_collection: data.prospect.isCollection,
         is_syndicated: data.prospect.isSyndicated,
-        authors: [], // TODO: transform authors from a comma-separated string to an array data.prospect.authors,
+        authors: data.prospect.authors.split(','), // TODO: transform authors from a comma-separated string to an array data.prospect.authors,
         publisher: data.prospect.publisher,
         domain: data.prospect.domain,
         prospect_source: data.prospect.prospectType,

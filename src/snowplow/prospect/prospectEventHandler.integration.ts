@@ -60,7 +60,7 @@ function assertProspectSchema(eventContext) {
         topic: testProspectData.topic,
         is_collection: testProspectData.isCollection,
         is_syndicated: testProspectData.isSyndicated,
-        authors: testProspectData.authors, // TODO: ???
+        authors: testProspectData.authors.split(','), // TODO: ???
         publisher: testProspectData.publisher,
         domain: testProspectData.domain,
         prospect_source: testProspectData.prospectType,
@@ -81,12 +81,12 @@ const testEventData = {
   },
 };
 
-describe('SnowplowHandler', () => {
+describe('ProspectEventHandler', () => {
   beforeEach(async () => {
     await resetSnowplowEvents();
   });
 
-  it('should send account delete event to snowplow', async () => {
+  it('should send prospectEvent to snowplow ', async () => {
     await new ProspectEventHandler().process({
       ...testEventData,
       eventType: EventType.PROSPECT_REVIEWED,
