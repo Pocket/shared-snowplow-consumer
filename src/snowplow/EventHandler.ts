@@ -8,27 +8,31 @@ export class EventHandler {
   }
 
   /**
-   * Track snowplow event
+   * Queue snowplow event to be tracked
    * @param event
    * @param context
    * @private
    */
-  protected async track(
+  protected addToTrackerQueue(
     event: PayloadBuilder,
     context: SelfDescribingJson[]
-  ): Promise<void> {
+  ): void {
     try {
-      //Note: the track method doesn't exactly work async
-      //there is an open issue with snowplow library to fix this
-      //we expect the ecs to execute this at some-point
-      await this.tracker.track(event, context);
+      // Note: the track method provided by the @snowplow/node-tracker package
+      // only queues the event to be tracked. The package has internal logic
+      // to decide when to flush the queue and actually send the events to the
+      // snowplow endpoint.
+      //
+      // Snowplow has an open issue to make this library async:
+      // https://github.com/snowplow/snowplow-javascript-tracker/issues/1087
+      this.tracker.track(event, context);
       console.log(
-        `emitting snowplow event ->${JSON.stringify(
+        `queueing snowplow event to be tracked ->${JSON.stringify(
           event.getJson()
         )} with context -> ${JSON.stringify(context)}`
       );
     } catch (ex) {
-      const message = `Failed to send event to snowplow.\n event: ${event}\n context: ${context}`;
+      const message = `Failed to queue event to snowplow.\n event: ${event}\n context: ${context}`;
       console.log(message);
       Sentry.addBreadcrumb({ message });
       Sentry.captureException(ex);
