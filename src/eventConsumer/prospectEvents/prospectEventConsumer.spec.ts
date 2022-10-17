@@ -11,7 +11,7 @@ describe('getProspectEventPayload', () => {
     };
 
     const requestBody = {
-      'detail-type': 'dismiss-prospect',
+      'detail-type': 'prospect-dismiss',
       source: 'prospect-events',
       detail: testProspectData,
     };

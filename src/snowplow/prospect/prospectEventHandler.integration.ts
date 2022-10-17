@@ -59,7 +59,7 @@ function assertProspectSchema(eventContext) {
         topic: testProspectData.topic,
         is_collection: testProspectData.isCollection,
         is_syndicated: testProspectData.isSyndicated,
-        authors: testProspectData.authors.split(','), // TODO: ???
+        authors: testProspectData.authors.split(','),
         publisher: testProspectData.publisher,
         domain: testProspectData.domain,
         prospect_source: testProspectData.prospectType,

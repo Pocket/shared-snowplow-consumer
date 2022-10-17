@@ -9,7 +9,7 @@ import { ProspectEventHandler } from '../../snowplow/prospect/prospectEventHandl
 //defined here:
 // https://github.com/Pocket/pocket-event-bridge/blob/f462cbb1b166d937fcd62319f88c90efc7653ebc/.aws/src/event-rules/user-api-events/eventConfig.ts#L3
 export const DetailTypeToSnowplowMap: Record<string, EventTypeString> = {
-  'dismiss-prospect': 'PROSPECT_REVIEWED',
+  'prospect-dismiss': 'PROSPECT_REVIEWED',
 };
 
 //event bridge payload for prospect

@@ -31,9 +31,9 @@ type ProspectContext = Omit<SelfDescribingJson, 'data'> & {
     domain?: string;
     prospect_source: string;
     scheduled_surface_id: string;
-    created_at: number;
+    created_at: number; // A Unix timestamp
     reviewed_by?: string;
-    reviewed_at?: number;
+    reviewed_at?: number; // A Unix timestamp
     prospect_review_status: ProspectReviewStatus;
   };
 };
@@ -94,15 +94,15 @@ export class ProspectEventHandler extends EventHandler {
         topic: data.prospect.topic,
         is_collection: data.prospect.isCollection,
         is_syndicated: data.prospect.isSyndicated,
-        authors: data.prospect.authors.split(','), // TODO: transform authors from a comma-separated string to an array data.prospect.authors,
+        authors: data.prospect.authors.split(','),
         publisher: data.prospect.publisher,
         domain: data.prospect.domain,
         prospect_source: data.prospect.prospectType,
         scheduled_surface_id: data.prospect.scheduledSurfaceGuid,
-        created_at: data.prospect.createdAt, // TODO: is this a Unix timestamp?
+        created_at: data.prospect.createdAt,
         prospect_review_status: data.prospect.prospectReviewStatus,
         reviewed_by: data.prospect.reviewedBy,
-        reviewed_at: data.prospect.reviewedAt, // TODO: is this a Unix timestamp?
+        reviewed_at: data.prospect.reviewedAt,
       },
     };
   }
