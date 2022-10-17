@@ -35,13 +35,13 @@ export class UserEventHandler extends EventHandler {
    * method to create and process event data
    * @param data
    */
-  async process(data: UserEventPayloadSnowplow): Promise<void> {
+  process(data: UserEventPayloadSnowplow): void {
     this.addRequestInfoToTracker(data);
     const event = buildSelfDescribingEvent({
       event: UserEventHandler.generateAccountUpdateEvent(data),
     });
     const context = UserEventHandler.generateEventContext(data);
-    await super.track(event, context);
+    super.addToTrackerQueue(event, context);
   }
 
   /**
