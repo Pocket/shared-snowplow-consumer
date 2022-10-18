@@ -57,7 +57,7 @@ export class ProspectEventHandler extends EventHandler {
       event: ProspectEventHandler.generateProspectUpdateEvent(data),
     });
     const context = ProspectEventHandler.generateEventContext(data);
-    await super.track(event, context);
+    super.addToTrackerQueue(event, context);
   }
 
   /**
