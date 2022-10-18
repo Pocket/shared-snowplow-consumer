@@ -13,7 +13,7 @@ export enum EventType {
 // Mapping of detail-type (via event bridge message)
 // to function that should be invoked to process the message
 export const eventConsumer: {
-  [key: string]: (message: any) => Promise<void>;
+  [key: string]: (message: any) => void;
 } = {
   [EventType.ACCOUNT_DELETION]: userEventConsumer,
   [EventType.ACCOUNT_EMAIL_UPDATED]: userEventConsumer,

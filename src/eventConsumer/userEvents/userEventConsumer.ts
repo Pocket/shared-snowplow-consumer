@@ -30,9 +30,9 @@ export const DetailTypeToSnowplowMap: Record<string, EventTypeString> = {
   'account-email-updated': 'ACCOUNT_EMAIL_UPDATED',
 };
 
-export async function userEventConsumer(requestBody: any) {
+export function userEventConsumer(requestBody: any) {
   console.log(`requestBody -> ${JSON.stringify(requestBody)}`);
-  await new UserEventHandler().process(getUserEventPayload(requestBody));
+  new UserEventHandler().process(getUserEventPayload(requestBody));
 }
 
 /**

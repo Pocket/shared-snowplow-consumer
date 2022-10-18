@@ -105,7 +105,7 @@ describe('UserEventHandler', () => {
   });
 
   it('should send account delete event to snowplow', async () => {
-    await new UserEventHandler().process({
+    new UserEventHandler().process({
       ...testEventData,
       eventType: EventType.ACCOUNT_DELETE,
     });
@@ -132,7 +132,7 @@ describe('UserEventHandler', () => {
   });
 
   it('should send update email event to snowplow', async () => {
-    await new UserEventHandler().process({
+    new UserEventHandler().process({
       ...testEventData,
       eventType: EventType.ACCOUNT_EMAIL_UPDATED,
     });
