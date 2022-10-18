@@ -15,10 +15,8 @@ export const DetailTypeToSnowplowMap: Record<string, EventTypeString> = {
 //event bridge payload for prospect
 export type ProspectEventBusPayload = Prospect;
 
-export async function prospectEventConsumer(requestBody: any) {
-  await new ProspectEventHandler().process(
-    getProspectEventPayload(requestBody)
-  );
+export function prospectEventConsumer(requestBody: any) {
+  new ProspectEventHandler().process(getProspectEventPayload(requestBody));
 }
 
 /**

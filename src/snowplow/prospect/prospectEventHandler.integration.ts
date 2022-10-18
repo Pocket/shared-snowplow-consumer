@@ -86,7 +86,7 @@ describe('ProspectEventHandler', () => {
   });
 
   it('should send prospectEvent to snowplow ', async () => {
-    await new ProspectEventHandler().process({
+    new ProspectEventHandler().process({
       ...testEventData,
       eventType: EventType.PROSPECT_REVIEWED,
     });

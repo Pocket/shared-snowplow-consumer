@@ -52,7 +52,7 @@ export class ProspectEventHandler extends EventHandler {
    * method to create and process event data
    * @param data
    */
-  async process(data: ProspectEventPayloadSnowplow): Promise<void> {
+  process(data: ProspectEventPayloadSnowplow): void {
     const event = buildSelfDescribingEvent({
       event: ProspectEventHandler.generateProspectUpdateEvent(data),
     });
