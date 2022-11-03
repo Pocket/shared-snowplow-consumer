@@ -15,9 +15,6 @@ const emitter = gotEmitter(
   config.snowplow.retries
 );
 
-export const tracker = snowPlowTracker(
-  emitter,
-  null,
-  config.snowplow.appId,
-  true
-);
+export function getTracker(appId) {
+  return snowPlowTracker(emitter, null, appId, true);
+}
