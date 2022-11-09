@@ -74,15 +74,21 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     );
 
     //as of now, listens to dismiss-prospect events from prospect-api
-    const prospectEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.prospectEventTopic}`;
+    //const prospectEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.prospectEventTopic}`;
+    const prospectEventTopicArn =
+      'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-ProspectEventTopic';
     this.subscribeSqsToSnsTopic(
       sqsEventLambda,
+      //todo: have dlq per squad
       snsTopicDlq,
       prospectEventTopicArn,
       config.eventBridge.prospectEventTopic
     );
 
-    const SNSTopicsSubscriptionList = [userEventTopicArn, prospectEventTopicArn]
+    const SNSTopicsSubscriptionList = [
+      userEventTopicArn,
+      prospectEventTopicArn,
+    ];
     //assigns inline access policy for SQS and DLQ.
     //include sns topic that we want the queue to subscribe to within this policy.
     this.createPoliciesForAccountDeletionMonitoringSqs(
@@ -90,7 +96,6 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       snsTopicDlq,
       SNSTopicsSubscriptionList
     );
-
 
     //ecs app creation.
     const appProps: SharedSnowplowConsumerProps = {
