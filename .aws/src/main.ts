@@ -67,15 +67,15 @@ class SnowplowSharedConsumerStack extends TerraformStack {
 
     //as of now, listens to dismiss-prospect events from prospect-api
     //const prospectEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.prospectEventTopic}`;
-    const prospectEventTopicArn =
-      'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-ProspectEventTopic';
-    this.subscribeSqsToSnsTopic(
-      sqsEventLambda,
-      //todo: have dlq per event so the alerting is set per event/team and not per repo
-      snsTopicDlq,
-      prospectEventTopicArn,
-      config.eventBridge.prospectEventTopic
-    );
+    // const prospectEventTopicArn =
+    //   'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-ProspectEventTopic';
+    // this.subscribeSqsToSnsTopic(
+    //   sqsEventLambda,
+    //   //todo: have dlq per event so the alerting is set per event/team and not per repo
+    //   snsTopicDlq,
+    //   prospectEventTopicArn,
+    //   config.eventBridge.prospectEventTopic
+    // );
 
     // const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
     // this.subscribeSqsToSnsTopic(
@@ -85,17 +85,17 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     //   config.eventBridge.userTopic
     // );
 
-    const SNSTopicsSubscriptionList = [
-      // userEventTopicArn,
-      prospectEventTopicArn,
-    ];
-    //assigns inline access policy for SQS and DLQ.
-    //include sns topic that we want the queue to subscribe to within this policy.
-    this.createPoliciesForAccountDeletionMonitoringSqs(
-      sqsEventLambda.construct.applicationSqsQueue.sqsQueue,
-      snsTopicDlq,
-      SNSTopicsSubscriptionList
-    );
+    // const SNSTopicsSubscriptionList = [
+    //   // userEventTopicArn,
+    //   prospectEventTopicArn,
+    // ];
+    // //assigns inline access policy for SQS and DLQ.
+    // //include sns topic that we want the queue to subscribe to within this policy.
+    // this.createPoliciesForAccountDeletionMonitoringSqs(
+    //   sqsEventLambda.construct.applicationSqsQueue.sqsQueue,
+    //   snsTopicDlq,
+    //   SNSTopicsSubscriptionList
+    // );
 
     //ecs app creation.
     const appProps: SharedSnowplowConsumerProps = {
