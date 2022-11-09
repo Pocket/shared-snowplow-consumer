@@ -81,6 +81,7 @@ export class ProspectEventHandler extends EventHandler {
   private static generateReviewedEventAccountContext(
     data: ProspectEventPayloadSnowplow
   ): ProspectContext {
+    const authorArray: string[] = data.prospect.authors.split(',');
     return {
       schema: config.snowplow.schemas.prospect,
       data: {
@@ -94,7 +95,7 @@ export class ProspectEventHandler extends EventHandler {
         topic: data.prospect.topic,
         is_collection: data.prospect.isCollection,
         is_syndicated: data.prospect.isSyndicated,
-        authors: data.prospect.authors.split(','),
+        authors: authorArray,
         publisher: data.prospect.publisher,
         domain: data.prospect.domain,
         prospect_source: data.prospect.prospectType,

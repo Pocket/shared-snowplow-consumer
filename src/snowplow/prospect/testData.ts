@@ -22,7 +22,7 @@ export const testProspectData = {
   title: 'A tale of two cities',
   isSyndicated: true,
   isCollection: false,
-  authors: 'Charles Dickens, Mark Twain',
+  authors: 'Mark Twain, John Bon Jovi',
   prospectReviewStatus: ProspectReviewStatus.Dismissed,
   // The LDAP string of the curator who reviewed this prospect - for now, only dismissing prospect.
   reviewedBy: 'user|ldap',
