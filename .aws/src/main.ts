@@ -77,16 +77,16 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       config.eventBridge.prospectEventTopic
     );
 
-    const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
-    this.subscribeSqsToSnsTopic(
-      sqsEventLambda,
-      snsTopicDlq,
-      userEventTopicArn,
-      config.eventBridge.userTopic
-    );
+    // const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
+    // this.subscribeSqsToSnsTopic(
+    //   sqsEventLambda,
+    //   snsTopicDlq,
+    //   userEventTopicArn,
+    //   config.eventBridge.userTopic
+    // );
 
     const SNSTopicsSubscriptionList = [
-      userEventTopicArn,
+      // userEventTopicArn,
       prospectEventTopicArn,
     ];
     //assigns inline access policy for SQS and DLQ.
