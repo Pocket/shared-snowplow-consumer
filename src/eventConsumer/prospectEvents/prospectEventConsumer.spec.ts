@@ -1,9 +1,6 @@
 import { getProspectEventPayload } from './prospectEventConsumer';
 import { ProspectEventPayloadSnowplow } from '../../snowplow/prospect/types';
-import {
-  eventBridgeTestPayload,
-  testProspectData,
-} from '../../snowplow/prospect/testData';
+import { eventBridgeTestPayload } from '../../snowplow/prospect/testData';
 
 describe('getProspectEventPayload', () => {
   it('should convert request body to Prospect', () => {
