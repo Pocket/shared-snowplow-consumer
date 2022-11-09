@@ -65,24 +65,24 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       tags: config.tags,
     });
 
-    const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
-    this.subscribeSqsToSnsTopic(
-      sqsEventLambda,
-      snsTopicDlq,
-      userEventTopicArn,
-      config.eventBridge.userTopic
-    );
-
     //as of now, listens to dismiss-prospect events from prospect-api
     //const prospectEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.prospectEventTopic}`;
     const prospectEventTopicArn =
       'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-ProspectEventTopic';
     this.subscribeSqsToSnsTopic(
       sqsEventLambda,
-      //todo: have dlq per squad
+      //todo: have dlq per event so the alerting is set per event/team and not per repo
       snsTopicDlq,
       prospectEventTopicArn,
       config.eventBridge.prospectEventTopic
+    );
+
+    const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
+    this.subscribeSqsToSnsTopic(
+      sqsEventLambda,
+      snsTopicDlq,
+      userEventTopicArn,
+      config.eventBridge.userTopic
     );
 
     const SNSTopicsSubscriptionList = [
