@@ -81,6 +81,9 @@ export class ProspectEventHandler extends EventHandler {
   private static generateReviewedEventAccountContext(
     data: ProspectEventPayloadSnowplow
   ): ProspectContext {
+    console.log(
+      `generateReviewedEventAccountContext(): data -> ${JSON.stringify(data)}`
+    );
     const authorArray: string[] = data.prospect.authors.split(',');
     return {
       schema: config.snowplow.schemas.prospect,

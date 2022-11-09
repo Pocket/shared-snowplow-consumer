@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
     );
   }
 
-  await eventConsumer[detailType](req.body);
+  eventConsumer[detailType](req.body);
 
   return res.send({
     status: 'OK',
