@@ -7,7 +7,7 @@ export async function processor(event: any): Promise<any> {
   for await (const record of event.Records) {
     try {
       const requestBody = JSON.parse(JSON.parse(record.body).Message);
-      console.log(`message received -> ${JSON.stringify(requestBody)}`);
+      console.log(`message received-> ${JSON.stringify(requestBody)}`);
       await callSendEventEndpoint(requestBody);
     } catch (error) {
       console.log(
