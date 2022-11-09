@@ -30,7 +30,7 @@ export function getProspectEventPayload(
   const eventPayload: ProspectEventBusPayload = eventObj['detail'];
   const detailType = eventObj['detail-type'];
   return {
-    prospect: eventPayload,
+    prospect: eventPayload['prospect'],
     object_version: 'new',
     eventType: DetailTypeToSnowplowMap[detailType],
   };

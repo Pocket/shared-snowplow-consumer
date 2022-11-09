@@ -24,7 +24,7 @@ export type Prospect = {
   authors?: string;
   approvedCorpusItem?: { url: string };
   rejectedCorpusItem?: { url: string };
-  prospectReviewStatus: ProspectReviewStatus;
+  prospectReviewStatus: string;
   // The LDAP string of the curator who reviewed this prospect - for now, only dismissing prospect.
   reviewedBy?: string;
   // The Unix timestamp in seconds.
@@ -57,12 +57,4 @@ export type ObjectUpdate = {
 //snowplow event type
 export enum EventType {
   PROSPECT_REVIEWED = 'PROSPECT_REVIEWED',
-}
-
-export enum ProspectReviewStatus {
-  Created = 'created',
-  Recommendation = 'recommendation',
-  Corpus = 'corpus',
-  Rejected = 'rejected',
-  Dismissed = 'dismissed',
 }

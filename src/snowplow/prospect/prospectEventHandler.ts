@@ -3,7 +3,6 @@ import { SelfDescribingJson } from '@snowplow/tracker-core';
 import {
   ObjectUpdate,
   ProspectEventPayloadSnowplow,
-  ProspectReviewStatus,
   SnowplowEventMap,
 } from './types';
 import { config } from '../../config';
@@ -34,7 +33,7 @@ type ProspectContext = Omit<SelfDescribingJson, 'data'> & {
     created_at: number; // A Unix timestamp
     reviewed_by?: string;
     reviewed_at?: number; // A Unix timestamp
-    prospect_review_status: ProspectReviewStatus;
+    prospect_review_status: string;
   };
 };
 

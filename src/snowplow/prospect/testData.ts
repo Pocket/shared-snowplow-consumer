@@ -1,4 +1,31 @@
-import { ProspectReviewStatus } from './types';
+export const eventBridgeTestPayload = {
+  prospect: {
+    id: '123-abc',
+    prospectId: '456-cde',
+    scheduledSurfaceGuid: 'NEW_TAB_EN_US',
+    topic: 'ENTERTAINMENT',
+    prospectType: 'GLOBAL',
+    url: 'https://www.test.com/a-story',
+    saveCount: 333,
+    rank: 222,
+    curated: false,
+    createdAt: 160000000,
+    domain: 'test.com',
+    excerpt: 'Once upon a time...',
+    imageUrl: 'https://www.test.com/a-story.jpg',
+    language: 'EN',
+    publisher: 'Test.com',
+    title: 'A very interesting story',
+    isSyndicated: false,
+    isCollection: false,
+    authors: 'Mark Twain, John Bon Jovi',
+    prospectReviewStatus: 'dismissed',
+    reviewedBy: 'test-user|ldap-something',
+    reviewedAt: 1600000,
+  },
+  eventType: 'prospect-dismiss',
+  object_version: 'new',
+};
 
 export const testProspectData = {
   // a GUID we generate prior to inserting into dynamo
@@ -23,7 +50,7 @@ export const testProspectData = {
   isSyndicated: true,
   isCollection: false,
   authors: 'Mark Twain, John Bon Jovi',
-  prospectReviewStatus: ProspectReviewStatus.Dismissed,
+  prospectReviewStatus: 'dismissed',
   // The LDAP string of the curator who reviewed this prospect - for now, only dismissing prospect.
   reviewedBy: 'user|ldap',
   // The Unix timestamp in seconds.
