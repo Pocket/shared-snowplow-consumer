@@ -27,7 +27,7 @@
   "homepage": "https://github.com/Pocket/shared-snowplow-consumer#readme",
   "dependencies": {
     "@sentry/node": "^6.17.5",
-    "@sentry/tracing": "^6.17.4",
+    "@sentry/tracing": "^7.20.0",
     "@snowplow/node-tracker": "3.1.6",
     "aws-xray-sdk-express": "^3.3.4",
     "express": "4.18.2",
