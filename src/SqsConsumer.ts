@@ -34,6 +34,7 @@ export class SqsConsumer {
       SqsConsumer.eventName,
       async () => await this.pollMessage()
     );
+
     // Start the polling by emitting an initial event
     if (pollOnInit) {
       emitter.emit(SqsConsumer.eventName);
@@ -72,7 +73,7 @@ export class SqsConsumer {
     }
     // Process any messages received and schedule next poll
     if (body != null) {
-      const status = this.processMessage(body);
+      const status = await this.processMessage(body);
 
       if (!status) {
         await this.insertToDLQ(data.Messages[0])
@@ -94,13 +95,12 @@ export class SqsConsumer {
   /**
    * returns false if it cannot process the given message
    * any error is logged in sentry
-   * @param message, message, whose body contains eventBridge payload
+   * @param message, SQS message body that contains eventBridge payload
    * @return true if processed successfully, false if error occurs
    */
-  public async processMessage(message: any)  {
+  async processMessage(messageBody: any)  {
     try {
-      console.log(`received messageBody -> ${JSON.stringify(message.body)}`);
-      const detailType = message.body['detail-type'];
+      const detailType = messageBody['detail-type'];
 
       if (eventConsumer[detailType] == null) {
         throw new Error(
@@ -108,13 +108,13 @@ export class SqsConsumer {
         );
       }
 
-      await eventConsumer[detailType](message.body);
+      await eventConsumer[detailType](messageBody);
       return true;
     } catch (error) {
       const errorMessage = 'Error deleting message from queue';
       console.error(errorMessage, error);
-      console.error(JSON.stringify(message));
-      Sentry.addBreadcrumb({ message: errorMessage, data: message });
+      console.error(JSON.stringify(messageBody));
+      Sentry.addBreadcrumb({ message: errorMessage, data: messageBody });
       Sentry.captureException(error);
       return false;
     }
@@ -137,7 +137,7 @@ export class SqsConsumer {
    * snowplow event queue
    * @param message processed SQS message
    */
-  async deleteMessage(message: Message) {
+  private async deleteMessage(message: Message) {
     const deleteParams = {
       QueueUrl: config.aws.sqs.sharedSnowplowQueue.url,
       ReceiptHandle: message.ReceiptHandle,
@@ -156,7 +156,7 @@ export class SqsConsumer {
   private async insertToDLQ(message) {
     const insertParams = {
       QueueUrl: config.aws.sqs.sharedSnowplowQueue.dlqUrl,
-      MessageBody: message
+      MessageBody: message.Body
     };
     try {
       await this.sqsClient.send(new SendMessageCommand(insertParams));
