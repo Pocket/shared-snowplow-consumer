@@ -9,11 +9,13 @@ import {
 import { datasources, kms, sns, sqs } from '@cdktf/provider-aws';
 
 export type SharedSnowplowConsumerProps = {
+  caller: datasources.DataAwsCallerIdentity;
   pagerDuty: PocketPagerDuty;
   region: datasources.DataAwsRegion;
-  caller: datasources.DataAwsCallerIdentity;
   secretsManagerKmsAlias: kms.DataAwsKmsAlias;
   snsTopic: sns.DataAwsSnsTopic;
+  sqsConsumeQueue: sqs.SqsQueue;
+  sqsDLQ: sqs.SqsQueue;
 };
 
 export class SharedSnowplowConsumerApp extends Resource {
@@ -154,6 +156,18 @@ export class SharedSnowplowConsumerApp extends Resource {
             resources: ['*'],
             effect: 'Allow',
           },
+          {
+            actions: [
+              'sqs:DeleteMessage',
+              'sqs:ReceiveMessage',
+              'sqs:SendMessage',
+              'sqs:SendMessageBatch',
+            ],
+            resources: [
+              this.config.sqsConsumeQueue.arn,
+              this.config.sqsDLQ.arn
+            ]
+          }
         ],
         taskExecutionDefaultAttachmentArn:
           'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
