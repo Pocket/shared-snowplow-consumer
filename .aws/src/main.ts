@@ -14,15 +14,11 @@ import {
   sqs,
 } from '@cdktf/provider-aws';
 import { config } from './config';
-import {
-  PocketVPC,
-  PocketPagerDuty,
-} from '@pocket-tools/terraform-modules';
+import { PocketPagerDuty } from '@pocket-tools/terraform-modules';
 import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
 import { ArchiveProvider } from '@cdktf/provider-archive';
 import { NullProvider } from '@cdktf/provider-null';
-import { SQSConsumerLambda } from './sqsConsumerLambda';
 import {
   SharedSnowplowConsumerApp,
   SharedSnowplowConsumerProps,
@@ -48,14 +44,14 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     const caller = new datasources.DataAwsCallerIdentity(this, 'caller');
     const pagerDuty = this.createPagerDuty();
 
-    // Consume Queue
+    // Consume Queue - receives all events from event-bridge
     const sqsConsumeQueue = new sqs.SqsQueue(this, 'shared-event-consumer', {
       name: `${config.prefix}-SharedEventConsumer-Queue`,
       tags: config.tags,
-    }
-    )
+    });
 
-    // Dead Letter Queue (dlq) for sqs-sns subscription
+    // Dead Letter Queue (dlq) for sqs-sns subscription. \
+    //also re-used for any snowplow emission failure
     const snsTopicDlq = new sqs.SqsQueue(this, 'sns-topic-dlq', {
       name: `${config.prefix}-SNS-Topics-DLQ`,
       tags: config.tags,
@@ -79,7 +75,12 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       config.eventBridge.prospectEventTopic
     );
 
-    const SNSTopicsSubscriptionList = [userEventTopicArn, prospectEventTopicArn]
+    // please add any additional event subscription here . . .
+    const SNSTopicsSubscriptionList = [
+      userEventTopicArn,
+      prospectEventTopicArn,
+    ];
+
     // assigns inline access policy for SQS and DLQ.
     // include SNS topics that we want the queue to subscribe to within this policy.
     this.createPoliciesForAccountDeletionMonitoringSqs(
@@ -96,7 +97,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       secretsManagerKmsAlias: this.getSecretsManagerKmsAlias(),
       snsTopic: this.getCodeDeploySnsTopic(),
       sqsConsumeQueue: sqsConsumeQueue,
-      sqsDLQ: snsTopicDlq
+      sqsDLQ: snsTopicDlq,
     };
 
     new SharedSnowplowConsumerApp(

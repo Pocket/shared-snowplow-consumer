@@ -33,17 +33,6 @@ export class SharedSnowplowConsumerApp extends Resource {
     const { pagerDuty, region, caller, secretsManagerKmsAlias, snsTopic } =
       this.config;
 
-    const databaseSecretsArn = `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.name}/${config.environment}/READITLA_DB`;
-    // Set out the DB connection details for the production (legacy) database.
-    const databaseSecretEnvVars = {
-      readHost: `${databaseSecretsArn}:read_host::`,
-      readUser: `${databaseSecretsArn}:read_username::`,
-      readPassword: `${databaseSecretsArn}:read_password::`,
-      writeHost: `${databaseSecretsArn}:write_host::`,
-      writeUser: `${databaseSecretsArn}:write_username::`,
-      writePassword: `${databaseSecretsArn}:write_password::`,
-    };
-
     const secretResources = [
       `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:Shared`,
       `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:Shared/*`,
@@ -165,9 +154,9 @@ export class SharedSnowplowConsumerApp extends Resource {
             ],
             resources: [
               this.config.sqsConsumeQueue.arn,
-              this.config.sqsDLQ.arn
-            ]
-          }
+              this.config.sqsDLQ.arn,
+            ],
+          },
         ],
         taskExecutionDefaultAttachmentArn:
           'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
