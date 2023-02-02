@@ -24,6 +24,7 @@ export class SqsConsumer {
   readonly sqsClient: SQSClient;
   static readonly eventName = 'pollSnowplowSqsQueue';
   constructor(public readonly emitter: EventEmitter, pollOnInit = true) {
+    console.log(`retriving queue`);
     this.sqsClient = new SQSClient({
       region: config.aws.region,
       endpoint: config.aws.endpoint,
@@ -37,6 +38,7 @@ export class SqsConsumer {
 
     // Start the polling by emitting an initial event
     if (pollOnInit) {
+      console.log(`emitting sqsConsumer event`);
       emitter.emit(SqsConsumer.eventName);
     }
   }
@@ -64,6 +66,7 @@ export class SqsConsumer {
       data = await this.sqsClient.send(new ReceiveMessageCommand(params));
       if (data.Messages && data.Messages.length > 0) {
         body = JSON.parse(data.Messages[0].Body);
+        console.log(`SQS body -> `+ JSON.stringify(body));
       }
     } catch (error) {
       const receiveError = 'Error receiving messages from queue';
@@ -76,8 +79,11 @@ export class SqsConsumer {
       const status = await this.processMessage(body);
 
       if (!status) {
+        console.log(`adding to DLQ -> ${JSON.stringify(data.Messages[0])}`)
         await this.insertToDLQ(data.Messages[0])
       }
+
+      //delete all messages as they are moved to DLQ
       await this.deleteMessage(data.Messages[0]);
 
       // Schedule next message poll
@@ -138,6 +144,8 @@ export class SqsConsumer {
    * @param message processed SQS message
    */
   private async deleteMessage(message: Message) {
+    console.log(`deleting SQS message -> `+ JSON.stringify(message));
+
     const deleteParams = {
       QueueUrl: config.aws.sqs.sharedSnowplowQueue.url,
       ReceiptHandle: message.ReceiptHandle,

@@ -34,7 +34,7 @@ export const config = {
         maxMessages: 1,
         waitTimeSeconds: 0,
         defaultPollIntervalSeconds: 300,
-        afterMessagePollIntervalSeconds: 0.5, // every 500ms
+        afterMessagePollIntervalSeconds: 0.1, // every 100ms
         messageRetentionSeconds: 1209600, //14 days
       },
     },

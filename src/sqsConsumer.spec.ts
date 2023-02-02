@@ -89,7 +89,7 @@ describe('sqsConsumer', () => {
         //todo: this stub doesn't work.
         const stub = sinon
           .stub(
-           Consumer, 'userEventConsumer' ).callsFake(stubUserEventConsumer)
+           Consumer, 'userEventConsumer' ).callsFake(stubUserEventConsumer).resolves()
 
         await sqsConsumer.pollMessage();
         expect(
