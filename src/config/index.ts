@@ -28,7 +28,8 @@ export const config = {
         url:
           process.env.SNOWPLOW_EVENTS_SQS_QUEUE ||
           'http://localhost:4566/queue/SharedSnowplowConsumer-Prod-SharedEventConsumer-Queue',
-        dlqUrl: process.env.SNOWPLOW_EVENTS_DLQ_URL ||
+        dlqUrl:
+          process.env.SNOWPLOW_EVENTS_DLQ_URL ||
           'http://localhost:4566/queue/SharedSnowplowConsumer-Prod-SharedEventConsumer-Queue-Deadletter',
         visibilityTimeout: 10000,
         maxMessages: 1,

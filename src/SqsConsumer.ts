@@ -7,10 +7,10 @@ import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
   Message,
-  ReceiveMessageCommandOutput, SendMessageCommand
+  ReceiveMessageCommandOutput,
+  SendMessageCommand,
 } from '@aws-sdk/client-sqs';
 import { setTimeout } from 'timers/promises';
-
 
 /**
  * class to poll the SQS message from the snowplow event queue,
@@ -31,10 +31,7 @@ export class SqsConsumer {
       maxAttempts: 3,
     });
 
-    emitter.on(
-      SqsConsumer.eventName,
-      async () => await this.pollMessage()
-    );
+    emitter.on(SqsConsumer.eventName, async () => await this.pollMessage());
 
     // Start the polling by emitting an initial event
     if (pollOnInit) {
@@ -66,7 +63,7 @@ export class SqsConsumer {
       data = await this.sqsClient.send(new ReceiveMessageCommand(params));
       if (data.Messages && data.Messages.length > 0) {
         body = JSON.parse(data.Messages[0].Body);
-        console.log(`SQS body -> `+ JSON.stringify(body));
+        console.log(`SQS body -> ` + JSON.stringify(body));
       }
     } catch (error) {
       const receiveError = 'Error receiving messages from queue';
@@ -79,8 +76,8 @@ export class SqsConsumer {
       const status = await this.processMessage(body);
 
       if (!status) {
-        console.log(`adding to DLQ -> ${JSON.stringify(data.Messages[0])}`)
-        await this.insertToDLQ(data.Messages[0])
+        console.log(`adding to DLQ -> ${JSON.stringify(data.Messages[0])}`);
+        await this.insertToDLQ(data.Messages[0]);
       }
 
       //delete all messages as they are moved to DLQ
@@ -88,7 +85,8 @@ export class SqsConsumer {
 
       // Schedule next message poll
       await this.scheduleNextPoll(
-        config.aws.sqs.sharedSnowplowQueue.afterMessagePollIntervalSeconds * 1000
+        config.aws.sqs.sharedSnowplowQueue.afterMessagePollIntervalSeconds *
+          1000
       );
     } else {
       // If no messages were found, schedule another poll after 5 mins
@@ -104,7 +102,7 @@ export class SqsConsumer {
    * @param message, SQS message body that contains eventBridge payload
    * @return true if processed successfully, false if error occurs
    */
-  async processMessage(messageBody: any)  {
+  async processMessage(messageBody: any) {
     try {
       const detailType = messageBody['detail-type'];
 
@@ -124,7 +122,6 @@ export class SqsConsumer {
       Sentry.captureException(error);
       return false;
     }
-
   }
 
   /**
@@ -144,7 +141,7 @@ export class SqsConsumer {
    * @param message processed SQS message
    */
   private async deleteMessage(message: Message) {
-    console.log(`deleting SQS message -> `+ JSON.stringify(message));
+    console.log(`deleting SQS message -> ` + JSON.stringify(message));
 
     const deleteParams = {
       QueueUrl: config.aws.sqs.sharedSnowplowQueue.url,
@@ -164,7 +161,7 @@ export class SqsConsumer {
   private async insertToDLQ(message) {
     const insertParams = {
       QueueUrl: config.aws.sqs.sharedSnowplowQueue.dlqUrl,
-      MessageBody: message.Body
+      MessageBody: message.Body,
     };
     try {
       await this.sqsClient.send(new SendMessageCommand(insertParams));
