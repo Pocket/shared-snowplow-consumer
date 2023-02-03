@@ -24,7 +24,7 @@ export class SqsConsumer {
   readonly sqsClient: SQSClient;
   static readonly eventName = 'pollSnowplowSqsQueue';
   constructor(public readonly emitter: EventEmitter, pollOnInit = true) {
-    console.log(`retriving queue`);
+    console.log(`retrieving queue`);
     this.sqsClient = new SQSClient({
       region: config.aws.region,
       endpoint: config.aws.endpoint,
@@ -120,7 +120,7 @@ export class SqsConsumer {
       await eventConsumer[detailType](event);
       return true;
     } catch (error) {
-      const errorMessage = 'Error deleting message from queue';
+      const errorMessage = 'Error processing message from queue';
       console.error(errorMessage, error);
       console.error(JSON.stringify(event));
       Sentry.addBreadcrumb({ message: errorMessage, data: event });
@@ -171,7 +171,7 @@ export class SqsConsumer {
     try {
       await this.sqsClient.send(new SendMessageCommand(insertParams));
     } catch (error) {
-      const errorMessage = 'Error deleting message from queue';
+      const errorMessage = 'Error inserting message from queue';
       console.error(errorMessage, error);
       console.error(JSON.stringify(message));
       Sentry.addBreadcrumb({ message: errorMessage, data: message });
