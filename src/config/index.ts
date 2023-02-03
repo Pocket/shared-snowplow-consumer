@@ -22,6 +22,23 @@ export const config = {
   aws: {
     region: process.env.AWS_REGION || 'us-east-1',
     endpoint: localAwsEndpoint,
+    sqs: {
+      batchSize: 1,
+      sharedSnowplowQueue: {
+        url:
+          process.env.SNOWPLOW_EVENTS_SQS_QUEUE ||
+          'http://localhost:4566/queue/SharedSnowplowConsumer-Prod-SharedEventConsumer-Queue',
+        dlqUrl:
+          process.env.SNOWPLOW_EVENTS_DLQ_URL ||
+          'http://localhost:4566/queue/SharedSnowplowConsumer-Prod-SharedEventConsumer-Queue-Deadletter',
+        visibilityTimeout: 10000,
+        maxMessages: 1,
+        waitTimeSeconds: 0,
+        defaultPollIntervalSeconds: 300,
+        afterMessagePollIntervalSeconds: 0.1, // every 100ms
+        messageRetentionSeconds: 1209600, //14 days
+      },
+    },
   },
   sentry: {
     dsn: process.env.SENTRY_DSN || '',
