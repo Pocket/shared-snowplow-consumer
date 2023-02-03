@@ -18,22 +18,23 @@ describe('sqsConsumer', () => {
   const sqsConsumer = new SqsConsumer(emitter, false);
 
   //fake Message mimicing SQS Body
-  //note: the message contains eventBridge content
-  const FakeMessageBody = {
+  //note: the message contains SNS payload
+  //the `message` inside SNS payload is the event bridge content
+  const fakeMessageBody = {
     Type: 'Notification',
-    MessageId: 'a4d7147f-f13b-5374-9108-4829954554d8',
+    MessageId: '5a0652eb-ea7f-5107-a221-0ebd72b2963e',
     TopicArn:
-      'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-UserEventTopic',
+      'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-ProspectEventTopic',
     Message:
-      '{"version":"0","id":"ee0d2b37-c5ce-e0b2-75ab-0ffb4d7cf7e9","detail-type":"account-deletion","source":"user-events","account":"410318598490","time":"2023-02-03T01:00:06Z","region":"us-east-1","resources":[],"detail":{"userId":"8","email":"test@sri.com","isPremium":"false"}}',
-    Timestamp: '2023-02-03T01:24:14.179Z',
+      '{"version":"0","id":"86e086d4-c38e-2c37-0a2d-96c3db4befa8","detail-type":"prospect-dismiss","source":"prospect-events","account":"410318598490","time":"2023-02-03T01:00:06Z","region":"us-east-1","resources":[],"detail":{"id":"123-abc","prospectId":"456-cde","scheduledSurfaceGuid":"NEW_TAB_EN_US","topic":"ENTERTAINMENT","prospectType":"GLOBAL","url":"https://www.test.com/a-story","saveCount":333,"rank":222,"curated":false,"createdAt":160000000,"domain":"test.com","excerpt":"Once upon a time...","imageUrl":"https://www.test.com/a-story.jpg","language":"EN","publisher":"Test.com","title":"A very interesting story","isSyndicated":false,"isCollection":false,"authors":"Mark Twain, John Bon Jovi","prospectReviewStatus":"dismissed","reviewedBy":"test-user|ldap-something","reviewedAt":1600000}}',
+    Timestamp: '2023-02-03T05:07:25.299Z',
     SignatureVersion: '1',
     Signature:
-      'YEECQ59HFpio/Kp/r8Y2mk6OTiOAi6+l35wr2a54jrAf/TOqSbiGyKBOUdM8Brk88QEvkMJh6+OZ6g84YiFrA4VC1VrupaATP8WSe+oTl42J/UJRqipPm86rnBB+cUOMCjvpZ1yQ74PoOmkC7h/KNCyvjJp+SkhAElJr/Avai3zVwL8R5iPuJIsVfoWMFEGcu7CNn6lRflMVw+QYjnsxaa1Bc+JyVZUjJe/0C6MX+r0u44PoR5/aw06c0Fppr01bPdfB+R5RYLzafVRYXLIFFQ9jIAFQQdOEubpxmyOe1if5w16TmUI02ZLlOCRY3h2S5IvgoiIbNnh0RmOgmZrE2g==',
+      'aKnaDzCpDmZF8C33r4NVpT/wVh1zZMrucnv2LpfnMkSHorS+6BByAMl6ufZIH+vLKNi2OE0BUWqmuH0KKQ0VgQAMWOfFrk/f2qYPrU2r9HAXgpZmuRhYGe0NpIQWKYX7GGiDjEbFIQS/d+nd6VMc98+GlbQ1fqqwEt9WDT30aZrTA36gFLzLaKQnNUM6L7/HhD/HYUxTCyD0Zw3916EZCE46JA+4Bevw+uDxc9X7a2NQEjs6ACrV4D72VT9Xg5wyKz4pAx65IVC09UCxQt5FSH+XXcogM5KvMtkKdVnAM2QlC30q/5ygIjbUC4DGvRsiP5kKgUMsr6ZQ003ZIIx3iQ==',
     SigningCertURL:
       'https://sns.us-east-1.amazonaws.com/SimpleNotificationService-56e67fcb41f6fec09b0196692625d385.pem',
     UnsubscribeURL:
-      'https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-UserEventTopic:5eec23c7-c0b9-46db-be98-65ca0bcbfd73',
+      'https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-ProspectEventTopic:ee0ddf8a-ace7-4a9b-9b30-391eb601edc7',
   };
 
   let scheduleStub: sinon.SinonStub;
@@ -93,7 +94,7 @@ describe('sqsConsumer', () => {
     describe('pollMessage', () => {
       it('invokes eventConsumer on successful message polling', async () => {
         const testMessages = {
-          Messages: [{ Body: FakeMessageBody }],
+          Messages: [{ Body: fakeMessageBody }],
         };
 
         sinon.stub(SQSClient.prototype, 'send').resolves(testMessages);
@@ -109,7 +110,7 @@ describe('sqsConsumer', () => {
 
   it('schedules polling another message after a delay', async () => {
     const sqsMessage = {
-      Messages: [{ Body: FakeMessageBody }],
+      Messages: [{ Body: JSON.stringify(fakeMessageBody) }],
     };
     sinon.stub(SQSClient.prototype, 'send').resolves(sqsMessage);
     sinon.stub(sqsConsumer, 'processMessage').resolves(true);
@@ -123,7 +124,7 @@ describe('sqsConsumer', () => {
       .stub(SQSClient.prototype, 'send')
       .onFirstCall()
       .resolves({
-        Messages: [{ Body: FakeMessageBody }],
+        Messages: [{ Body: JSON.stringify(fakeMessageBody) }],
       })
       .onSecondCall()
       .resolves();
@@ -139,7 +140,7 @@ describe('sqsConsumer', () => {
 
   it('delete message and add to DLQ if not successfully processed', async () => {
     const testVal = {
-      Messages: [{ Body: FakeMessageBody }],
+      Messages: [{ Body: JSON.stringify(fakeMessageBody) }],
     };
     sinon.stub(sqsConsumer, 'processMessage').resolves(false);
     const sqsStub = sinon
@@ -155,7 +156,7 @@ describe('sqsConsumer', () => {
     expect(sqsStub.secondCall.args[0].input).toEqual(
       new SendMessageCommand({
         QueueUrl: config.aws.sqs.sharedSnowplowQueue.dlqUrl,
-        MessageBody: testVal.Messages[0].Body.Message,
+        MessageBody: testVal.Messages[0].Body,
       }).input
     );
     expect(sqsStub.thirdCall.args[0].input).toEqual(

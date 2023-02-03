@@ -57,25 +57,28 @@ export class SqsConsumer {
     };
 
     let data: ReceiveMessageCommandOutput;
-    let body: any; //body is generic based on event payload
+    let eventBridgeContent: any; //body is generic based on event payload
 
     try {
       data = await this.sqsClient.send(new ReceiveMessageCommand(params));
       if (data.Messages && data.Messages.length > 0) {
-        body = JSON.parse(data.Messages[0].Body['Message']);
+        //body contains SNS payload
+        const body = JSON.parse(data.Messages[0].Body);
+        //get the eventBridge content from SNS.Message
+        eventBridgeContent = JSON.parse(body.Message);
         console.log(`SQS body -> ` + JSON.stringify(body));
       }
     } catch (error) {
       const receiveError = `Error receiving messages from queue ${JSON.stringify(
-        data?.Messages[0].Body['Message']
+        data?.Messages[0].Body
       )}`;
       console.error(receiveError, error);
       Sentry.addBreadcrumb({ message: receiveError });
       Sentry.captureException(error, { level: Sentry.Severity.Critical });
     }
     // Process any messages received and schedule next poll
-    if (body != null) {
-      const status = await this.processMessage(body);
+    if (eventBridgeContent != null) {
+      const status = await this.processMessage(eventBridgeContent);
 
       if (!status) {
         console.log(`adding to DLQ -> ${JSON.stringify(data.Messages[0])}`);
@@ -101,12 +104,12 @@ export class SqsConsumer {
   /**
    * returns false if it cannot process the given message
    * any error is logged in sentry
-   * @param message, SQS message body that contains eventBridge payload
+   * @param event, event bridge content from SNS payload
    * @return true if processed successfully, false if error occurs
    */
-  async processMessage(messageBody: any) {
+  async processMessage(event: any) {
     try {
-      const detailType = messageBody['detail-type'];
+      const detailType = event['detail-type'];
 
       if (eventConsumer[detailType] == null) {
         throw new Error(
@@ -114,13 +117,13 @@ export class SqsConsumer {
         );
       }
 
-      await eventConsumer[detailType](messageBody);
+      await eventConsumer[detailType](event);
       return true;
     } catch (error) {
       const errorMessage = 'Error deleting message from queue';
       console.error(errorMessage, error);
-      console.error(JSON.stringify(messageBody));
-      Sentry.addBreadcrumb({ message: errorMessage, data: messageBody });
+      console.error(JSON.stringify(event));
+      Sentry.addBreadcrumb({ message: errorMessage, data: event });
       Sentry.captureException(error);
       return false;
     }
@@ -163,7 +166,7 @@ export class SqsConsumer {
   private async insertToDLQ(message) {
     const insertParams = {
       QueueUrl: config.aws.sqs.sharedSnowplowQueue.dlqUrl,
-      MessageBody: message.Body.Message,
+      MessageBody: message.Body,
     };
     try {
       await this.sqsClient.send(new SendMessageCommand(insertParams));
