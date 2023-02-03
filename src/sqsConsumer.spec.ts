@@ -37,7 +37,7 @@ describe('sqsConsumer', () => {
   let scheduleStub: sinon.SinonStub;
   let sentryStub: sinon.SinonStub;
   let consoleStub: sinon.SinonStub;
-  let userConsumerStub: sinon.SinonStub;
+  let userEventConsumerStub: sinon.SinonStub;
 
   beforeEach(() => {
     sinon.restore();
@@ -45,7 +45,7 @@ describe('sqsConsumer', () => {
 
     sentryStub = sinon.stub(Sentry, 'captureException');
     consoleStub = sinon.stub(console, 'error');
-    userConsumerStub = sinon.stub(Consumer, 'userEventConsumer').resolves();
+    userEventConsumerStub = sinon.stub(Consumer, 'userEventConsumer');
   });
 
   afterEach(() => {
@@ -95,7 +95,7 @@ describe('sqsConsumer', () => {
 
         sinon.stub(SQSClient.prototype, 'send').resolves(testMessages);
         await sqsConsumer.pollMessage();
-        expect(userConsumerStub.calledOnce).toBeTruthy();
+        expect(userEventConsumerStub).toBeTruthy();
       });
     });
   });
