@@ -24,7 +24,7 @@ export class SqsConsumer {
   readonly sqsClient: SQSClient;
   static readonly eventName = 'pollSnowplowSqsQueue';
   constructor(public readonly emitter: EventEmitter, pollOnInit = true) {
-    console.log(`retriving queue`);
+    console.log(`retrieving queue`);
     this.sqsClient = new SQSClient({
       region: config.aws.region,
       endpoint: config.aws.endpoint,
