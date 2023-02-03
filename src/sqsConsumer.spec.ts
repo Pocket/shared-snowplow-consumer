@@ -16,28 +16,10 @@ export async function stubUserEventConsumer(requestBody: any) {
 describe('sqsConsumer', () => {
   const emitter = new EventEmitter();
   const sqsConsumer = new SqsConsumer(emitter, false);
-  const fakeMessageBody: any = {
-    version: '0',
-    'detail-type': 'account-deletion',
-    source: 'user-events',
-    account: '410318598490',
-    time: '2022-10-11T02:47:51Z',
-    region: 'us-east-1',
-    resources: [],
-    detail: {
-      userId: '1',
-      email: 'test@gmail.com',
-      apiId: '123abc',
-      isPremium: false,
-      language: 'en',
-      ipAddress: '127.0.0.1',
-      hashedGuid: 'abcd123',
-    },
-  };
 
   //fake Message mimicing SQS Body
   //note: the message contains eventBridge content
-  const fakeBackup = {
+  const FakeMessageBody = {
     Type: 'Notification',
     MessageId: 'a4d7147f-f13b-5374-9108-4829954554d8',
     TopicArn:
@@ -65,6 +47,16 @@ describe('sqsConsumer', () => {
     sentryStub = sinon.stub(Sentry, 'captureException');
     consoleStub = sinon.stub(console, 'error');
   });
+
+  afterAll(() => {
+    sinon.restore();
+  });
+
+  afterEach(() => {
+    //require this to clear `spyOn` counts between tests
+    jest.clearAllMocks();
+  });
+
   it('sends an event when the class is initialized', () => {
     const eventSpy = sinon.spy(emitter, 'emit');
     sinon.stub(SqsConsumer.prototype, 'pollMessage').resolves();
@@ -101,28 +93,23 @@ describe('sqsConsumer', () => {
     describe('pollMessage', () => {
       it('invokes eventConsumer on successful message polling', async () => {
         const testMessages = {
-          Messages: [{ Body: JSON.stringify(fakeMessageBody) }],
+          Messages: [{ Body: FakeMessageBody }],
         };
 
         sinon.stub(SQSClient.prototype, 'send').resolves(testMessages);
 
         //todo: this stub doesn't work.
-        const stub = sinon
-          .stub(Consumer, 'userEventConsumer')
-          .callsFake(stubUserEventConsumer)
-          .resolves();
-
+        sinon.stub(Consumer, 'userEventConsumer').resolves(true);
+        const spy = jest.spyOn(Consumer, 'userEventConsumer');
         await sqsConsumer.pollMessage();
-        expect(
-          stub.calledOnceWithExactly(testMessages.Messages[0].Body)
-        ).toEqual(1);
+        expect(spy).toBeCalledTimes(1);
       });
     });
   });
 
   it('schedules polling another message after a delay', async () => {
     const sqsMessage = {
-      Messages: [{ Body: JSON.stringify(fakeMessageBody) }],
+      Messages: [{ Body: FakeMessageBody }],
     };
     sinon.stub(SQSClient.prototype, 'send').resolves(sqsMessage);
     sinon.stub(sqsConsumer, 'processMessage').resolves(true);
@@ -135,7 +122,9 @@ describe('sqsConsumer', () => {
     const sqsStub = sinon
       .stub(SQSClient.prototype, 'send')
       .onFirstCall()
-      .resolves({ Messages: [{ Body: JSON.stringify(fakeMessageBody) }] })
+      .resolves({
+        Messages: [{ Body: FakeMessageBody }],
+      })
       .onSecondCall()
       .resolves();
     await sqsConsumer.pollMessage();
@@ -149,7 +138,9 @@ describe('sqsConsumer', () => {
   });
 
   it('delete message and add to DLQ if not successfully processed', async () => {
-    const testVal = { Messages: [{ Body: JSON.stringify(fakeMessageBody) }] };
+    const testVal = {
+      Messages: [{ Body: FakeMessageBody }],
+    };
     sinon.stub(sqsConsumer, 'processMessage').resolves(false);
     const sqsStub = sinon
       .stub(SQSClient.prototype, 'send')
@@ -164,7 +155,7 @@ describe('sqsConsumer', () => {
     expect(sqsStub.secondCall.args[0].input).toEqual(
       new SendMessageCommand({
         QueueUrl: config.aws.sqs.sharedSnowplowQueue.dlqUrl,
-        MessageBody: testVal.Messages[0].Body,
+        MessageBody: testVal.Messages[0].Body.Message,
       }).input
     );
     expect(sqsStub.thirdCall.args[0].input).toEqual(

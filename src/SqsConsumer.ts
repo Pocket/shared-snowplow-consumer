@@ -66,7 +66,9 @@ export class SqsConsumer {
         console.log(`SQS body -> ` + JSON.stringify(body));
       }
     } catch (error) {
-      const receiveError = 'Error receiving messages from queue';
+      const receiveError = `Error receiving messages from queue ${JSON.stringify(
+        data?.Messages[0].Body['Message']
+      )}`;
       console.error(receiveError, error);
       Sentry.addBreadcrumb({ message: receiveError });
       Sentry.captureException(error, { level: Sentry.Severity.Critical });
@@ -161,7 +163,7 @@ export class SqsConsumer {
   private async insertToDLQ(message) {
     const insertParams = {
       QueueUrl: config.aws.sqs.sharedSnowplowQueue.dlqUrl,
-      MessageBody: message.Body,
+      MessageBody: message.Body.Message,
     };
     try {
       await this.sqsClient.send(new SendMessageCommand(insertParams));
