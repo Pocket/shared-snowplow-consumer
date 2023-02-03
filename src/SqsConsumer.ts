@@ -62,7 +62,7 @@ export class SqsConsumer {
     try {
       data = await this.sqsClient.send(new ReceiveMessageCommand(params));
       if (data.Messages && data.Messages.length > 0) {
-        body = JSON.parse(data.Messages[0].Body);
+        body = JSON.parse(data.Messages[0].Body['Message']);
         console.log(`SQS body -> ` + JSON.stringify(body));
       }
     } catch (error) {

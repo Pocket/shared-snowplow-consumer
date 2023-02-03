@@ -34,6 +34,26 @@ describe('sqsConsumer', () => {
       hashedGuid: 'abcd123',
     },
   };
+
+  //fake Message mimicing SQS Body
+  //note: the message contains eventBridge content
+  const fakeBackup = {
+    Type: 'Notification',
+    MessageId: 'a4d7147f-f13b-5374-9108-4829954554d8',
+    TopicArn:
+      'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-UserEventTopic',
+    Message:
+      '{"version":"0","id":"ee0d2b37-c5ce-e0b2-75ab-0ffb4d7cf7e9","detail-type":"account-deletion","source":"user-events","account":"410318598490","time":"2023-02-03T01:00:06Z","region":"us-east-1","resources":[],"detail":{"userId":"8","email":"test@sri.com","isPremium":"false"}}',
+    Timestamp: '2023-02-03T01:24:14.179Z',
+    SignatureVersion: '1',
+    Signature:
+      'YEECQ59HFpio/Kp/r8Y2mk6OTiOAi6+l35wr2a54jrAf/TOqSbiGyKBOUdM8Brk88QEvkMJh6+OZ6g84YiFrA4VC1VrupaATP8WSe+oTl42J/UJRqipPm86rnBB+cUOMCjvpZ1yQ74PoOmkC7h/KNCyvjJp+SkhAElJr/Avai3zVwL8R5iPuJIsVfoWMFEGcu7CNn6lRflMVw+QYjnsxaa1Bc+JyVZUjJe/0C6MX+r0u44PoR5/aw06c0Fppr01bPdfB+R5RYLzafVRYXLIFFQ9jIAFQQdOEubpxmyOe1if5w16TmUI02ZLlOCRY3h2S5IvgoiIbNnh0RmOgmZrE2g==',
+    SigningCertURL:
+      'https://sns.us-east-1.amazonaws.com/SimpleNotificationService-56e67fcb41f6fec09b0196692625d385.pem',
+    UnsubscribeURL:
+      'https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-UserEventTopic:5eec23c7-c0b9-46db-be98-65ca0bcbfd73',
+  };
+
   let scheduleStub: sinon.SinonStub;
   let sentryStub: sinon.SinonStub;
   let consoleStub: sinon.SinonStub;
