@@ -10,9 +10,6 @@ import { config } from './config';
 import { SqsConsumer } from './SqsConsumer';
 import * as Consumer from './eventConsumer/userEvents/userEventConsumer';
 
-export async function stubUserEventConsumer(requestBody: any) {
-  return requestBody;
-}
 describe('sqsConsumer', () => {
   const emitter = new EventEmitter();
   const sqsConsumer = new SqsConsumer(emitter, false);
@@ -40,6 +37,7 @@ describe('sqsConsumer', () => {
   let scheduleStub: sinon.SinonStub;
   let sentryStub: sinon.SinonStub;
   let consoleStub: sinon.SinonStub;
+  let userConsumerStub: sinon.SinonStub;
 
   beforeEach(() => {
     sinon.restore();
@@ -47,6 +45,7 @@ describe('sqsConsumer', () => {
 
     sentryStub = sinon.stub(Sentry, 'captureException');
     consoleStub = sinon.stub(console, 'error');
+    userConsumerStub = sinon.stub(Consumer, 'userEventConsumer').resolves();
   });
 
   afterEach(() => {
@@ -95,11 +94,8 @@ describe('sqsConsumer', () => {
         };
 
         sinon.stub(SQSClient.prototype, 'send').resolves(testMessages);
-
-        //todo: this stub doesn't work.
-        const stub = sinon.stub(Consumer, 'userEventConsumer').resolves(true);
         await sqsConsumer.pollMessage();
-        expect(stub.calledOnce).toBeTruthy();
+        expect(userConsumerStub.calledOnce).toBeTruthy();
       });
     });
   });
