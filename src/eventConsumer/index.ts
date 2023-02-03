@@ -18,5 +18,4 @@ export const eventConsumer: {
   [EventType.ACCOUNT_DELETION]: userEventConsumer,
   [EventType.ACCOUNT_EMAIL_UPDATED]: userEventConsumer,
   [EventType.PROSPECT_DISMISS]: prospectEventConsumer,
-  //collections-event: collections
 };
