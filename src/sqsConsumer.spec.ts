@@ -26,7 +26,7 @@ describe('sqsConsumer', () => {
     TopicArn:
       'arn:aws:sns:us-east-1:410318598490:PocketEventBridge-Dev-ProspectEventTopic',
     Message:
-      '{"version":"0","id":"86e086d4-c38e-2c37-0a2d-96c3db4befa8","detail-type":"prospect-dismiss","source":"prospect-events","account":"410318598490","time":"2023-02-03T01:00:06Z","region":"us-east-1","resources":[],"detail":{"id":"123-abc","prospectId":"456-cde","scheduledSurfaceGuid":"NEW_TAB_EN_US","topic":"ENTERTAINMENT","prospectType":"GLOBAL","url":"https://www.test.com/a-story","saveCount":333,"rank":222,"curated":false,"createdAt":160000000,"domain":"test.com","excerpt":"Once upon a time...","imageUrl":"https://www.test.com/a-story.jpg","language":"EN","publisher":"Test.com","title":"A very interesting story","isSyndicated":false,"isCollection":false,"authors":"Mark Twain, John Bon Jovi","prospectReviewStatus":"dismissed","reviewedBy":"test-user|ldap-something","reviewedAt":1600000}}',
+      '{"version":"0","id":"86e086d4-c38e-2c37-0a2d-96c3db4befa8","detail-type":"account-deletion","source":"user-events","account":"410318598490","time":"2023-02-03T01:00:06Z","region":"us-east-1","resources":[],"detail":{"userId": "1"}}',
     Timestamp: '2023-02-03T05:07:25.299Z',
     SignatureVersion: '1',
     Signature:
@@ -49,13 +49,10 @@ describe('sqsConsumer', () => {
     consoleStub = sinon.stub(console, 'error');
   });
 
-  afterAll(() => {
-    sinon.restore();
-  });
-
   afterEach(() => {
     //require this to clear `spyOn` counts between tests
     jest.clearAllMocks();
+    sinon.restore();
   });
 
   it('sends an event when the class is initialized', () => {
@@ -94,16 +91,15 @@ describe('sqsConsumer', () => {
     describe('pollMessage', () => {
       it('invokes eventConsumer on successful message polling', async () => {
         const testMessages = {
-          Messages: [{ Body: fakeMessageBody }],
+          Messages: [{ Body: JSON.stringify(fakeMessageBody) }],
         };
 
         sinon.stub(SQSClient.prototype, 'send').resolves(testMessages);
 
         //todo: this stub doesn't work.
-        sinon.stub(Consumer, 'userEventConsumer').resolves(true);
-        const spy = jest.spyOn(Consumer, 'userEventConsumer');
+        const stub = sinon.stub(Consumer, 'userEventConsumer').resolves(true);
         await sqsConsumer.pollMessage();
-        expect(spy).toBeCalledTimes(1);
+        expect(stub.calledOnce).toBeTruthy();
       });
     });
   });
