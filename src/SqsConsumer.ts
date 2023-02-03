@@ -171,7 +171,7 @@ export class SqsConsumer {
     try {
       await this.sqsClient.send(new SendMessageCommand(insertParams));
     } catch (error) {
-      const errorMessage = 'Error deleting message from queue';
+      const errorMessage = 'Error inserting message from queue';
       console.error(errorMessage, error);
       console.error(JSON.stringify(message));
       Sentry.addBreadcrumb({ message: errorMessage, data: message });
