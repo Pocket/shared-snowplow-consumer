@@ -9,11 +9,13 @@ import {
 import { datasources, kms, sns, sqs } from '@cdktf/provider-aws';
 
 export type SharedSnowplowConsumerProps = {
+  caller: datasources.DataAwsCallerIdentity;
   pagerDuty: PocketPagerDuty;
   region: datasources.DataAwsRegion;
-  caller: datasources.DataAwsCallerIdentity;
   secretsManagerKmsAlias: kms.DataAwsKmsAlias;
   snsTopic: sns.DataAwsSnsTopic;
+  sqsConsumeQueue: sqs.SqsQueue;
+  sqsDLQ: sqs.SqsQueue;
 };
 
 export class SharedSnowplowConsumerApp extends Resource {
@@ -30,17 +32,6 @@ export class SharedSnowplowConsumerApp extends Resource {
   private createPocketAlbApplication(): PocketALBApplication {
     const { pagerDuty, region, caller, secretsManagerKmsAlias, snsTopic } =
       this.config;
-
-    const databaseSecretsArn = `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.name}/${config.environment}/READITLA_DB`;
-    // Set out the DB connection details for the production (legacy) database.
-    const databaseSecretEnvVars = {
-      readHost: `${databaseSecretsArn}:read_host::`,
-      readUser: `${databaseSecretsArn}:read_username::`,
-      readPassword: `${databaseSecretsArn}:read_password::`,
-      writeHost: `${databaseSecretsArn}:write_host::`,
-      writeUser: `${databaseSecretsArn}:write_username::`,
-      writePassword: `${databaseSecretsArn}:write_password::`,
-    };
 
     const secretResources = [
       `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:Shared`,
@@ -87,6 +78,14 @@ export class SharedSnowplowConsumerApp extends Resource {
             {
               name: 'SNOWPLOW_ENDPOINT',
               value: config.envVars.snowplowEndpoint,
+            },
+            {
+              name: 'SNOWPLOW_EVENTS_SQS_QUEUE',
+              value: this.config.sqsConsumeQueue.url,
+            },
+            {
+              name: 'SNOWPLOW_EVENTS_DLQ_URL',
+              value: this.config.sqsDLQ.url,
             },
           ],
           secretEnvVars: [
@@ -153,6 +152,18 @@ export class SharedSnowplowConsumerApp extends Resource {
             ],
             resources: ['*'],
             effect: 'Allow',
+          },
+          {
+            actions: [
+              'sqs:DeleteMessage',
+              'sqs:ReceiveMessage',
+              'sqs:SendMessage',
+              'sqs:SendMessageBatch',
+            ],
+            resources: [
+              this.config.sqsConsumeQueue.arn,
+              this.config.sqsDLQ.arn,
+            ],
           },
         ],
         taskExecutionDefaultAttachmentArn:

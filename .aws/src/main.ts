@@ -14,16 +14,11 @@ import {
   sqs,
 } from '@cdktf/provider-aws';
 import { config } from './config';
-import {
-  PocketVPC,
-  PocketPagerDuty,
-  ApplicationSqsSnsTopicSubscription,
-} from '@pocket-tools/terraform-modules';
+import { PocketPagerDuty } from '@pocket-tools/terraform-modules';
 import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
 import { ArchiveProvider } from '@cdktf/provider-archive';
 import { NullProvider } from '@cdktf/provider-null';
-import { SQSConsumerLambda } from './sqsConsumerLambda';
 import {
   SharedSnowplowConsumerApp,
   SharedSnowplowConsumerProps,
@@ -47,58 +42,62 @@ class SnowplowSharedConsumerStack extends TerraformStack {
 
     const region = new datasources.DataAwsRegion(this, 'region');
     const caller = new datasources.DataAwsCallerIdentity(this, 'caller');
-    const pocketVPC = new PocketVPC(this, 'pocket-vpc');
-
     const pagerDuty = this.createPagerDuty();
 
-    // Create Lambda to consume from pocket-shared-event-bus.
-    //this will forward the event-bridge content to ECS.
-    //if we are not successfully sending to ECS, the messages will be stored in DLQ.
-    const sqsEventLambda = new SQSConsumerLambda(this, 'SharedEventConsumer', {
-      vpc: pocketVPC,
-      pagerDuty,
+    // Consume Queue - receives all events from event-bridge
+    const sqsConsumeQueue = new sqs.SqsQueue(this, 'shared-event-consumer', {
+      name: `${config.prefix}-SharedEventConsumer-Queue`,
+      tags: config.tags,
     });
 
-    //dlq for sqs-sns subscription
+    // Dead Letter Queue (dlq) for sqs-sns subscription. \
+    //also re-used for any snowplow emission failure
     const snsTopicDlq = new sqs.SqsQueue(this, 'sns-topic-dlq', {
       name: `${config.prefix}-SNS-Topics-DLQ`,
       tags: config.tags,
     });
 
+    // Consumer Queue should be able to listen to user events
     const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
     this.subscribeSqsToSnsTopic(
-      sqsEventLambda,
+      sqsConsumeQueue,
       snsTopicDlq,
       userEventTopicArn,
       config.eventBridge.userTopic
     );
 
-    //as of now, listens to dismiss-prospect events from prospect-api
+    // Consumer Queue should be able to listen to dismiss-prospect events from prospect-api
     const prospectEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.prospectEventTopic}`;
     this.subscribeSqsToSnsTopic(
-      sqsEventLambda,
+      sqsConsumeQueue,
       snsTopicDlq,
       prospectEventTopicArn,
       config.eventBridge.prospectEventTopic
     );
 
-    const SNSTopicsSubscriptionList = [userEventTopicArn, prospectEventTopicArn]
-    //assigns inline access policy for SQS and DLQ.
-    //include sns topic that we want the queue to subscribe to within this policy.
+    // please add any additional event subscription here . . .
+    const SNSTopicsSubscriptionList = [
+      userEventTopicArn,
+      prospectEventTopicArn,
+    ];
+
+    // assigns inline access policy for SQS and DLQ.
+    // include SNS topics that we want the queue to subscribe to within this policy.
     this.createPoliciesForAccountDeletionMonitoringSqs(
-      sqsEventLambda.construct.applicationSqsQueue.sqsQueue,
+      sqsConsumeQueue,
       snsTopicDlq,
       SNSTopicsSubscriptionList
     );
 
-
-    //ecs app creation.
+    // ECS app creation.
     const appProps: SharedSnowplowConsumerProps = {
+      caller: caller,
       pagerDuty: pagerDuty,
       region: region,
-      caller: caller,
       secretsManagerKmsAlias: this.getSecretsManagerKmsAlias(),
       snsTopic: this.getCodeDeploySnsTopic(),
+      sqsConsumeQueue: sqsConsumeQueue,
+      sqsDLQ: snsTopicDlq,
     };
 
     new SharedSnowplowConsumerApp(
@@ -130,14 +129,14 @@ class SnowplowSharedConsumerStack extends TerraformStack {
 
   /**
    * Create SQS subscription for the SNS.
-   * @param sqsLambda SQS integrated with the snowplow-consumer-lambda
+   * @param sqsConsumeQueue SQS integrated the SQS consume queue
    * @param snsTopicArn topic the SQS wants to subscribe to.
    * @param snsTopicDlq the DLQ to which the messages will be forwarded if SQS is down
    * @param topicName topic we want to subscribe to.
    * @private
    */
   private subscribeSqsToSnsTopic(
-    sqsLambda: SQSConsumerLambda,
+    sqsConsumeQueue: sqs.SqsQueue,
     snsTopicDlq: sqs.SqsQueue,
     snsTopicArn: string,
     topicName: string
@@ -146,7 +145,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     return new sns.SnsTopicSubscription(this, `${topicName}-sns-subscription`, {
       topicArn: snsTopicArn,
       protocol: 'sqs',
-      endpoint: sqsLambda.construct.applicationSqsQueue.sqsQueue.arn,
+      endpoint: sqsConsumeQueue.arn,
       redrivePolicy: JSON.stringify({
         deadLetterTargetArn: snsTopicDlq.arn,
       }),
@@ -225,12 +224,12 @@ class SnowplowSharedConsumerStack extends TerraformStack {
                 {
                   test: 'ArnLike',
                   variable: 'aws:SourceArn',
-                  //add any sns topic to this list that we want this SQS to listen to
+                  // add any SNS topics to this list that we want SQSes (dlq, consume) to be able to access
                   values: snsTopicArns,
                 },
               ],
             },
-            //add any other subscription policy for this SQS
+            // add any other subscription policy for this SQS
           ],
         }
       ).json;

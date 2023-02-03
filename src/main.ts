@@ -4,7 +4,8 @@ import AWSXRay from 'aws-xray-sdk-core';
 import xrayExpress from 'aws-xray-sdk-express';
 import * as Sentry from '@sentry/node';
 import express from 'express';
-import { sendEventRouter } from './routes';
+import { EventEmitter } from 'events';
+import { SqsConsumer } from './SqsConsumer';
 
 //Set XRAY to just log if the context is missing instead of a runtime error
 AWSXRay.setContextMissingStrategy('LOG_ERROR');
@@ -33,8 +34,8 @@ app.get('/health', (req, res) => {
   res.status(200).send('ok');
 });
 
-// Endpoints for deleting account data
-app.use('/sendEvent', sendEventRouter);
+// Start polling for messages from snowplow event queue
+new SqsConsumer(new EventEmitter());
 
 //If there is no host header (really there always should be..) then use account-data-deleter-api as the name
 app.use(xrayExpress.openSegment('account-data-deleter-api'));

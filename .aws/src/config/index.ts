@@ -1,4 +1,4 @@
-const name = 'SharedSnowplowConsumer'; //todo: change the service name, match shared infrastructure name
+const name = 'SharedSnowplowConsumer';
 const domainPrefix = 'shared-snowplow-consumer';
 const isDev = process.env.NODE_ENV === 'development';
 const environment = isDev ? 'Dev' : 'Prod';

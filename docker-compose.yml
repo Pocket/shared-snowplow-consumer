@@ -17,6 +17,24 @@ services:
     depends_on:
       - snowplow
 
+  localstack:
+    image: localstack/localstack:1.2
+    env_file:
+      - .docker/local.env
+    ports:
+      - '4566:4566'
+    volumes:
+      - ./.docker/localstack:/docker-entrypoint-initaws.d
+    environment:
+      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
+      - DEBUG=1
+      - SERVICES=sqs
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - EXTRA_CORS_ALLOWED_HEADERS=Content-Disposition, Content-Type, x-amz-acl
+      - EXTRA_CORS_EXPOSE_HEADERS=ETag
+      - HOSTNAME_EXTERNAL=localstack
+
   snowplow:
     image: pocket/snowplow-micro:latest
     platform: linux/amd64
