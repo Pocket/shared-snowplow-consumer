@@ -45,7 +45,9 @@ describe('sqsConsumer', () => {
 
     sentryStub = sinon.stub(Sentry, 'captureException');
     consoleStub = sinon.stub(console, 'error');
-    userEventConsumerStub = sinon.stub(Consumer, 'userEventConsumer');
+    userEventConsumerStub = sinon
+      .stub(Consumer, 'userEventConsumer')
+      .resolves();
   });
 
   afterEach(() => {
