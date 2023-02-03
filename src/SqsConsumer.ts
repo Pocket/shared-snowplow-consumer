@@ -120,7 +120,7 @@ export class SqsConsumer {
       await eventConsumer[detailType](event);
       return true;
     } catch (error) {
-      const errorMessage = 'Error deleting message from queue';
+      const errorMessage = 'Error processing message from queue';
       console.error(errorMessage, error);
       console.error(JSON.stringify(event));
       Sentry.addBreadcrumb({ message: errorMessage, data: event });
