@@ -79,6 +79,14 @@ export class SharedSnowplowConsumerApp extends Resource {
               name: 'SNOWPLOW_ENDPOINT',
               value: config.envVars.snowplowEndpoint,
             },
+            {
+              name: 'SNOWPLOW_EVENTS_SQS_QUEUE',
+              value: this.config.sqsConsumeQueue.url,
+            },
+            {
+              name: 'SNOWPLOW_EVENTS_DLQ_URL',
+              value: this.config.sqsDLQ.url,
+            },
           ],
           secretEnvVars: [
             {
