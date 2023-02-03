@@ -7,6 +7,7 @@ import {
 } from 'cdktf';
 import {
   AwsProvider,
+  cloudwatch,
   iam,
   kms,
   sns,
@@ -50,14 +51,21 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       tags: config.tags,
     });
 
-    // Dead Letter Queue (dlq) for sqs-sns subscription. \
-    //also re-used for any snowplow emission failure
+    // Dead Letter Queue (dlq) for sqs-sns subscription.
+    // Also re-used for any Snowplow emission failure
     const snsTopicDlq = new sqs.SqsQueue(this, 'sns-topic-dlq', {
       name: `${config.prefix}-SNS-Topics-DLQ`,
       tags: config.tags,
     });
 
-    // Consumer Queue should be able to listen to user events
+    // DLQ Alarm.
+    this.createDeadLetterQueueAlarm(
+      pagerDuty,
+      snsTopicDlq.name,
+      `${config.prefix}-Dlq-Alarm`
+    );
+
+    // Consumer Queue should be able to listen to user events.
     const userEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.userTopic}`;
     this.subscribeSqsToSnsTopic(
       sqsConsumeQueue,
@@ -66,7 +74,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       config.eventBridge.userTopic
     );
 
-    // Consumer Queue should be able to listen to dismiss-prospect events from prospect-api
+    // Consumer Queue should be able to listen to dismiss-prospect events from prospect-api.
     const prospectEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.prospectEventTopic}`;
     this.subscribeSqsToSnsTopic(
       sqsConsumeQueue,
@@ -75,14 +83,14 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       config.eventBridge.prospectEventTopic
     );
 
-    // please add any additional event subscription here . . .
+    // Add additional event subscriptions here.
     const SNSTopicsSubscriptionList = [
       userEventTopicArn,
       prospectEventTopicArn,
     ];
 
-    // assigns inline access policy for SQS and DLQ.
-    // include SNS topics that we want the queue to subscribe to within this policy.
+    // Assigns inline access policy for SQS and DLQ.
+    // Include SNS topics that we want the queue to subscribe to within this policy.
     this.createPoliciesForAccountDeletionMonitoringSqs(
       sqsConsumeQueue,
       snsTopicDlq,
@@ -185,11 +193,6 @@ class SnowplowSharedConsumerStack extends TerraformStack {
    * Create inline IAM policy for the SQS and DLQ tied to the lambda
    * Note: we need to append any additional IAM policy to this.
    * Re-running this with a different iam would replace the inline access policy.
-   * @param
-   * @private
-   */
-
-  /**
    *
    * @param snsTopicQueue SQS that triggers the lambda
    * @param snsTopicDlq DLQ to which the messages will be forwarded if SQS is down
@@ -238,6 +241,43 @@ class SnowplowSharedConsumerStack extends TerraformStack {
         queueUrl: queue.resource.url,
         policy: policy,
       });
+    });
+  }
+
+  /**
+   * Function to create alarms for Dead-letter queues.
+   * Create a non-critical alarm in prod environment for
+   * SQS queue based on the number of messages visible.
+   * Default is 15 alerts on 2 evaluation period of 15 minutes.
+   * @param pagerDuty 
+   * @param queueName dead-letter queue name
+   * @param alarmName alarm name (please pass event-rule name for a clear description)
+   * @param evaluationPeriods
+   * @param periodInSeconds
+   * @param threshold
+   * @private
+   */
+  private createDeadLetterQueueAlarm(
+    pagerDuty: PocketPagerDuty,
+    queueName: string,
+    alarmName: string,
+    evaluationPeriods = 2,
+    periodInSeconds = 900,
+    threshold = 15
+  ) {
+    new cloudwatch.CloudwatchMetricAlarm(this, alarmName.toLowerCase(), {
+      alarmActions: config.isDev ? [] : [pagerDuty.snsNonCriticalAlarmTopic.arn],
+      alarmDescription: `Number of messages >= ${threshold}`,
+      alarmName: `${config.prefix}-${alarmName}`,
+      comparisonOperator: 'GreaterThanOrEqualToThreshold',
+      dimensions: { QueueName: queueName },
+      evaluationPeriods: evaluationPeriods,
+      metricName: 'ApproximateNumberOfMessagesVisible',
+      namespace: 'AWS/SQS',
+      okActions: config.isDev ? [] : [pagerDuty.snsNonCriticalAlarmTopic.arn],
+      period: periodInSeconds,
+      statistic: 'Sum',
+      threshold: threshold,
     });
   }
 }
