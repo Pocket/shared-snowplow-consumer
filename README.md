@@ -22,7 +22,10 @@ Architecutre diagram: https://miro.com/app/board/uXjVO5oHq_U=/
 - in `eventConsumer`, please map the event-bridge payload to your snowplow format.
 - in `snowplow` folder, please construct your snowplow payload as per your schema model
   - Make sure the schema version in `config.schema` that matches with dev/prod snowplow version
-- Note: please check with #support-data-analytics if the model can tolerate duplicate events before onboarding events to this repo
+
+### Note:
+- any event going through event-bridge has to be idempotent, and the consumer should be able to handle duplicate events in-case we replay the events.
+- please check with #support-data-analytics if the model can tolerate duplicate events before onboarding events to this repo
 
 ## Develop Locally
 ```bash
