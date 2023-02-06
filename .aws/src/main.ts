@@ -249,7 +249,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
    * Create a non-critical alarm in prod environment for
    * SQS queue based on the number of messages visible.
    * Default is 15 alerts on 2 evaluation period of 15 minutes.
-   * @param pagerDuty 
+   * @param pagerDuty
    * @param queueName dead-letter queue name
    * @param alarmName alarm name (please pass event-rule name for a clear description)
    * @param evaluationPeriods
@@ -266,7 +266,9 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     threshold = 15
   ) {
     new cloudwatch.CloudwatchMetricAlarm(this, alarmName.toLowerCase(), {
-      alarmActions: config.isDev ? [] : [pagerDuty.snsNonCriticalAlarmTopic.arn],
+      alarmActions: config.isDev
+        ? []
+        : [pagerDuty.snsNonCriticalAlarmTopic.arn],
       alarmDescription: `Number of messages >= ${threshold}`,
       alarmName: `${config.prefix}-${alarmName}`,
       comparisonOperator: 'GreaterThanOrEqualToThreshold',
