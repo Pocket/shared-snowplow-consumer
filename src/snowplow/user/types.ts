@@ -68,3 +68,10 @@ export const SnowplowEventMap: Record<EventTypeString, SnowplowEventType> = {
   ACCOUNT_DELETE: 'account_delete',
   ACCOUNT_EMAIL_UPDATED: 'account_email_updated',
 };
+
+export const userEventsSchema = {
+  account: 'iglu:com.pocket/account/jsonschema/1-0-2',
+  objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-9',
+  user: 'iglu:com.pocket/user/jsonschema/1-0-0',
+  apiUser: 'iglu:com.pocket/api_user/jsonschema/1-0-0',
+};

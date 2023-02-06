@@ -52,18 +52,12 @@ export const config = {
     retries: 3,
     appId: 'pocket-snowplow-consumer',
     events: EventType,
-    schemas: {
-      account: 'iglu:com.pocket/account/jsonschema/1-0-2',
-      objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-9',
-      user: 'iglu:com.pocket/user/jsonschema/1-0-0',
-      apiUser: 'iglu:com.pocket/api_user/jsonschema/1-0-0',
-      prospect: 'iglu:com.pocket/prospect/jsonschema/1-0-0',
-    },
     appIds: {
       //todo: make the event bridge event to send this
       //or convert from event bridge's source
       prospectApi: 'pocket-prospect-api',
       userApi: 'pocket-user-api',
+      collectionApi: 'pocket-collection-api',
     },
   },
 };

@@ -3,6 +3,7 @@ import { SelfDescribingJson } from '@snowplow/tracker-core';
 import {
   ObjectUpdate,
   ProspectEventPayloadSnowplow,
+  prospectEventSchema,
   ProspectReviewStatus,
   SnowplowEventMap,
 } from './types';
@@ -67,7 +68,7 @@ export class ProspectEventHandler extends EventHandler {
     data: ProspectEventPayloadSnowplow
   ): ObjectUpdateEvent {
     return {
-      schema: config.snowplow.schemas.objectUpdate,
+      schema: prospectEventSchema.objectUpdate,
       data: {
         trigger: SnowplowEventMap[data.eventType],
         object: 'prospect',
@@ -82,7 +83,7 @@ export class ProspectEventHandler extends EventHandler {
     data: ProspectEventPayloadSnowplow
   ): ProspectContext {
     return {
-      schema: config.snowplow.schemas.prospect,
+      schema: prospectEventSchema.prospect,
       data: {
         object_version: 'new',
         prospect_id: data.prospect.prospectId,

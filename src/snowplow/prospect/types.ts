@@ -66,3 +66,8 @@ export enum ProspectReviewStatus {
   Rejected = 'rejected',
   Dismissed = 'dismissed',
 }
+
+export const prospectEventSchema = {
+  objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-9',
+  prospect: 'iglu:com.pocket/prospect/jsonschema/1-0-0',
+};
