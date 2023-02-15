@@ -54,6 +54,7 @@ export const config = {
     prefix: 'PocketEventBridge',
     userTopic: 'UserEventTopic',
     prospectEventTopic: 'ProspectEventTopic',
+    collectionEventTopic: 'CollectionEventTopic',
   },
   envVars: {
     snowplowEndpoint: snowplowEndpoint,
