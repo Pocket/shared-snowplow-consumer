@@ -54,7 +54,7 @@ export const config = {
     events: EventType,
     schemas: {
       account: 'iglu:com.pocket/account/jsonschema/1-0-2',
-      objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-12',
+      objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-10',
       user: 'iglu:com.pocket/user/jsonschema/1-0-0',
       apiUser: 'iglu:com.pocket/api_user/jsonschema/1-0-0',
       prospect: 'iglu:com.pocket/prospect/jsonschema/1-0-0',

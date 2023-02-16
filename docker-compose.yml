@@ -36,7 +36,7 @@ services:
       - HOSTNAME_EXTERNAL=localstack
 
   snowplow:
-    image: pocket/snowplow-micro:latest
+    image: pocket/snowplow-micro:prod
     platform: linux/amd64
     ports:
       - '9090:9090'
