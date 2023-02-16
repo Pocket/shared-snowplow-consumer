@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
 import { config } from '../../config';
-import { ObjectUpdate, EventType } from './types';
+import { ObjectUpdate, EventType, userEventsSchema } from './types';
 import { UserEventHandler } from './userEventHandler';
 
 async function snowplowRequest(path: string, post = false): Promise<any> {
@@ -37,7 +37,7 @@ function assertValidSnowplowObjectUpdateEvents(
 
   expect(parsedEvents).to.include.deep.members(
     triggers.map((trigger) => ({
-      schema: config.snowplow.schemas.objectUpdate,
+      schema: userEventsSchema.objectUpdate,
       data: { trigger: trigger, object: 'account' },
     }))
   );
@@ -46,7 +46,7 @@ function assertValidSnowplowObjectUpdateEvents(
 function assertAccountDeleteSchema(eventContext) {
   expect(eventContext.data).to.include.deep.members([
     {
-      schema: config.snowplow.schemas.account,
+      schema: userEventsSchema.account,
       data: {
         object_version: 'new',
         user_id: parseInt(testAccountData.id),
@@ -58,7 +58,7 @@ function assertAccountDeleteSchema(eventContext) {
 function assertAccountSchema(eventContext) {
   expect(eventContext.data).to.include.deep.members([
     {
-      schema: config.snowplow.schemas.account,
+      schema: userEventsSchema.account,
       data: {
         object_version: 'new',
         user_id: parseInt(testAccountData.id),
@@ -71,7 +71,7 @@ function assertAccountSchema(eventContext) {
 function assertApiAndUserSchema(eventContext: { [p: string]: any }) {
   expect(eventContext.data).to.include.deep.members([
     {
-      schema: config.snowplow.schemas.user,
+      schema: userEventsSchema.user,
       data: {
         user_id: parseInt(testEventData.user.id),
         hashed_user_id: testAccountData.hashedId,
@@ -79,7 +79,7 @@ function assertApiAndUserSchema(eventContext: { [p: string]: any }) {
       },
     },
     {
-      schema: config.snowplow.schemas.apiUser,
+      schema: userEventsSchema.apiUser,
       data: { api_id: parseInt(testEventData.apiUser.apiId) },
     },
   ]);

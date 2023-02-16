@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
 import { config } from '../../config';
-import { ObjectUpdate, EventType } from './types';
+import { ObjectUpdate, EventType, prospectEventSchema } from './types';
 import { ProspectEventHandler } from './prospectEventHandler';
 import { testProspectData } from './testData';
 
@@ -38,7 +38,7 @@ function assertValidSnowplowObjectUpdateEvents(
 
   expect(parsedEvents).to.include.deep.members(
     triggers.map((trigger) => ({
-      schema: config.snowplow.schemas.objectUpdate,
+      schema: prospectEventSchema.objectUpdate,
       data: { trigger: trigger, object: 'prospect' },
     }))
   );
@@ -47,7 +47,7 @@ function assertValidSnowplowObjectUpdateEvents(
 function assertProspectSchema(eventContext) {
   expect(eventContext.data).to.include.deep.members([
     {
-      schema: config.snowplow.schemas.prospect,
+      schema: prospectEventSchema.prospect,
       data: {
         object_version: 'new',
         prospect_id: testProspectData.prospectId,
