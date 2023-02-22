@@ -96,7 +96,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     const SNSTopicsSubscriptionList = [
       userEventTopicArn,
       prospectEventTopicArn,
-      shareableListEventTopicArn,
+      shareableListsApiEventTopicArn,
     ];
 
     // Assigns inline access policy for SQS and DLQ.
