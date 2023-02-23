@@ -54,7 +54,7 @@ export const config = {
     prefix: 'PocketEventBridge',
     userTopic: 'UserEventTopic',
     prospectEventTopic: 'ProspectEventTopic',
-    shareableListsApiEventTopic: 'ShareableListEventTopic',
+    shareableListsApiEventTopic: 'ShareableListsApiEventTopic',
   },
   envVars: {
     snowplowEndpoint: snowplowEndpoint,
