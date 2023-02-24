@@ -83,20 +83,30 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       config.eventBridge.prospectEventTopic
     );
 
-    // Consumer Queue should be able to listen to shareable-list and shareable-list-item events from shareable-lists-api.
-    const shareableListsApiEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.shareableListsApiEventTopic}`;
+    // Consumer Queue should be able to listen to shareable-list (create, update, delete, hide) events from shareable-lists-api.
+    const shareableListEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.shareableListEventTopic}`;
     this.subscribeSqsToSnsTopic(
       sqsConsumeQueue,
       snsTopicDlq,
-      shareableListsApiEventTopicArn,
-      config.eventBridge.shareableListsApiEventTopic
+      shareableListEventTopicArn,
+      config.eventBridge.shareableListEventTopic
+    );
+
+    // Consumer Queue should be able to listen to shareable-list-item (create, delete) from shareable-lists-api.
+    const shareableListItemEventTopicArn = `arn:aws:sns:${region.name}:${caller.accountId}:${config.eventBridge.prefix}-${config.environment}-${config.eventBridge.shareableListItemEventTopic}`;
+    this.subscribeSqsToSnsTopic(
+      sqsConsumeQueue,
+      snsTopicDlq,
+      shareableListItemEventTopicArn,
+      config.eventBridge.shareableListItemEventTopic
     );
 
     // Add additional event subscriptions here.
     const SNSTopicsSubscriptionList = [
       userEventTopicArn,
       prospectEventTopicArn,
-      shareableListsApiEventTopicArn,
+      shareableListEventTopicArn,
+      shareableListItemEventTopicArn,
     ];
 
     // Assigns inline access policy for SQS and DLQ.
