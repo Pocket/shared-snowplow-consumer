@@ -1,6 +1,11 @@
 import { buildSelfDescribingEvent } from '@snowplow/node-tracker';
 import { SelfDescribingJson } from '@snowplow/tracker-core';
-import { EventType, SnowplowEventMap, UserEventPayloadSnowplow } from './types';
+import {
+  EventType,
+  SnowplowEventMap,
+  UserEventPayloadSnowplow,
+  userEventsSchema,
+} from './types';
 import { Account, ApiUser, ObjectUpdate, User } from './types';
 import { config } from '../../config';
 import { EventHandler } from '../EventHandler';
@@ -52,7 +57,7 @@ export class UserEventHandler extends EventHandler {
     data: UserEventPayloadSnowplow
   ): ObjectUpdateEvent {
     return {
-      schema: config.snowplow.schemas.objectUpdate,
+      schema: userEventsSchema.objectUpdate,
       data: {
         trigger: SnowplowEventMap[data.eventType],
         object: 'account',
@@ -67,7 +72,7 @@ export class UserEventHandler extends EventHandler {
     data: UserEventPayloadSnowplow
   ): AccountContext {
     return {
-      schema: config.snowplow.schemas.account,
+      schema: userEventsSchema.account,
       data: {
         object_version: 'new',
         user_id: parseInt(data.user.id),
@@ -79,7 +84,7 @@ export class UserEventHandler extends EventHandler {
     data: UserEventPayloadSnowplow
   ): AccountContext {
     return {
-      schema: config.snowplow.schemas.account,
+      schema: userEventsSchema.account,
       data: {
         object_version: 'new',
         user_id: parseInt(data.user.id),
@@ -106,7 +111,7 @@ export class UserEventHandler extends EventHandler {
     data: UserEventPayloadSnowplow
   ): UserContext {
     return {
-      schema: config.snowplow.schemas.user,
+      schema: userEventsSchema.user,
       data: {
         email: data.user.email,
         guid: data.user.guid,
@@ -121,7 +126,7 @@ export class UserEventHandler extends EventHandler {
     data: UserEventPayloadSnowplow
   ): ApiUserContext {
     return {
-      schema: config.snowplow.schemas.apiUser,
+      schema: userEventsSchema.apiUser,
       data: {
         api_id: parseInt(data.apiUser.apiId),
         name: data.apiUser.name,
