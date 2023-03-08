@@ -1,8 +1,9 @@
 import fetch from 'node-fetch';
 import { expect } from 'chai';
 import { config } from '../../config';
-import { ObjectUpdate, EventType, userEventsSchema } from './types';
-import { UserEventHandler } from './userEventHandler';
+import { ObjectUpdate, EventType, collectionEventSchema } from './types';
+import { CollectionEventHandler } from './collectionEventHandler';
+import { testCollectionData } from './testData';
 
 async function snowplowRequest(path: string, post = false): Promise<any> {
   const response = await fetch(`http://${config.snowplow.endpoint}${path}`, {
@@ -37,77 +38,57 @@ function assertValidSnowplowObjectUpdateEvents(
 
   expect(parsedEvents).to.include.deep.members(
     triggers.map((trigger) => ({
-      schema: userEventsSchema.objectUpdate,
-      data: { trigger: trigger, object: 'account' },
+      schema: collectionEventSchema.objectUpdate,
+      data: { trigger: trigger, object: 'collection' },
     }))
   );
 }
 
-function assertAccountDeleteSchema(eventContext) {
+function assertCollectionSchema(eventContext) {
   expect(eventContext.data).to.include.deep.members([
     {
-      schema: userEventsSchema.account,
+      schema: collectionEventSchema.collection,
       data: {
         object_version: 'new',
-        user_id: parseInt(testAccountData.id),
+        collection_id: testCollectionData.externalId,
+        slug: testCollectionData.slug,
+        title: testCollectionData.title,
+        status: testCollectionData.status,
+        language: testCollectionData.language,
+        authors: testCollectionData.authors,
+        stories: testCollectionData.stories,
+        created_at: testCollectionData.createdAt,
+        updated_at: testCollectionData.updatedAt,
+        image_url: testCollectionData.imageUrl,
+        labels: testCollectionData.labels,
+        intro: testCollectionData.intro,
+        curation_category: testCollectionData.curationCategory,
+        excerpt: testCollectionData.excerpt,
+        partnership: testCollectionData.partnership,
+        published_at: testCollectionData.publishedAt,
+        iab_parent_category: testCollectionData.IABParentCategory,
+        iab_child_category: testCollectionData.IABChildCategory,
       },
     },
   ]);
 }
-
-function assertAccountSchema(eventContext) {
-  expect(eventContext.data).to.include.deep.members([
-    {
-      schema: userEventsSchema.account,
-      data: {
-        object_version: 'new',
-        user_id: parseInt(testAccountData.id),
-        emails: [testAccountData.email],
-      },
-    },
-  ]);
-}
-
-function assertApiAndUserSchema(eventContext: { [p: string]: any }) {
-  expect(eventContext.data).to.include.deep.members([
-    {
-      schema: userEventsSchema.user,
-      data: {
-        user_id: parseInt(testEventData.user.id),
-        hashed_user_id: testAccountData.hashedId,
-        email: testAccountData.email,
-      },
-    },
-    {
-      schema: userEventsSchema.apiUser,
-      data: { api_id: parseInt(testEventData.apiUser.apiId) },
-    },
-  ]);
-}
-
-const testAccountData = {
-  id: '1',
-  hashedId: 'test_hashed_user_id',
-  email: 'test@pocket.com',
-  isPremium: true,
-};
 
 const testEventData = {
-  user: {
-    ...testAccountData,
+  object_version: 'new',
+  collection: {
+    ...testCollectionData,
   },
-  apiUser: { apiId: '1' },
 };
 
-describe('UserEventHandler', () => {
+describe('CollectionEventHandler', () => {
   beforeEach(async () => {
     await resetSnowplowEvents();
   });
 
-  it('should send account delete event to snowplow', async () => {
-    new UserEventHandler().process({
+  it('should send collection created event to snowplow ', async () => {
+    new CollectionEventHandler().process({
       ...testEventData,
-      eventType: EventType.ACCOUNT_DELETE,
+      eventType: EventType.COLLECTION_CREATED,
     });
 
     // wait a sec * 3
@@ -120,21 +101,23 @@ describe('UserEventHandler', () => {
     expect(allEvents.bad).to.equal(0);
 
     const goodEvents = await getGoodSnowplowEvents();
+
     const eventContext = parseSnowplowData(
       goodEvents[0].rawEvent.parameters.cx
     );
-    assertAccountDeleteSchema(eventContext);
-    assertApiAndUserSchema(eventContext);
+
+    assertCollectionSchema(eventContext);
+
     assertValidSnowplowObjectUpdateEvents(
       goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
-      ['account_delete']
+      ['collection_created']
     );
   });
 
-  it('should send update email event to snowplow', async () => {
-    new UserEventHandler().process({
+  it('should send collection updated event to snowplow ', async () => {
+    new CollectionEventHandler().process({
       ...testEventData,
-      eventType: EventType.ACCOUNT_EMAIL_UPDATED,
+      eventType: EventType.COLLECTION_UPDATED,
     });
 
     // wait a sec * 3
@@ -150,11 +133,12 @@ describe('UserEventHandler', () => {
     const eventContext = parseSnowplowData(
       goodEvents[0].rawEvent.parameters.cx
     );
-    assertApiAndUserSchema(eventContext);
-    assertAccountSchema(eventContext);
+
+    assertCollectionSchema(eventContext);
+
     assertValidSnowplowObjectUpdateEvents(
       goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
-      ['account_email_updated']
+      ['collection_updated']
     );
   });
 });
