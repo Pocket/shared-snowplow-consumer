@@ -31,15 +31,15 @@ type CollectionContext = Omit<SelfDescribingJson, 'data'> & {
     status: CollectionStatus;
     title: string;
     excerpt: string;
-    labels: [Label];
+    labels: Label[];
     intro: string;
     image_url: string;
-    authors: [CollectionAuthor];
+    authors: CollectionAuthor[];
     iab_parent_category: IABParentCategory;
     language: CollectionLanguage;
     curation_category: CurationCategory;
     partnership: CollectionPartnership;
-    stories: [CollectionStory];
+    stories: CollectionStory[];
     published_at: number;
     created_at: number;
     updated_at: number;
@@ -65,7 +65,8 @@ export class CollectionEventHandler extends EventHandler {
     const event = buildSelfDescribingEvent({
       event: CollectionEventHandler.generateCollectionEvent(data),
     });
-    const context = CollectionEventHandler.generateEventContext(data);
+    const context: SelfDescribingJson[] =
+      CollectionEventHandler.generateEventContext(data);
     super.addToTrackerQueue(event, context);
   }
 
@@ -97,7 +98,7 @@ export class CollectionEventHandler extends EventHandler {
   private static generateSnowplowCollectionEvent(
     data: CollectionEventPayloadSnowplow
   ): CollectionContext {
-    return {
+    const snowplowEvent = {
       schema: collectionEventSchema.collection,
       data: {
         object_version: 'new',
@@ -121,5 +122,6 @@ export class CollectionEventHandler extends EventHandler {
         iab_child_category: data.collection.IABChildCategory,
       },
     };
+    return snowplowEvent;
   }
 }

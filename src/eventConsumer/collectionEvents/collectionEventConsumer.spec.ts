@@ -13,7 +13,7 @@ describe('getCollectionEventPayload', () => {
     const requestBody = {
       'detail-type': 'collection-created',
       source: 'collection-created',
-      detail: testCollectionData,
+      detail: { collection: testCollectionData },
     };
 
     const payload = getCollectionEventPayload(requestBody);
@@ -30,7 +30,7 @@ describe('getCollectionEventPayload', () => {
     const requestBody = {
       'detail-type': 'collection-updated',
       source: 'collection-updated',
-      detail: testCollectionData,
+      detail: { collection: testCollectionData },
     };
 
     const payload = getCollectionEventPayload(requestBody);

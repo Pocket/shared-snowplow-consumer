@@ -37,13 +37,13 @@ export type Collection = {
   title: string;
   status: CollectionStatus;
   language: CollectionLanguage;
-  authors: [CollectionAuthor];
-  stories: [CollectionStory];
+  authors: CollectionAuthor[];
+  stories: CollectionStory[];
   createdAt: number; // in seconds
   updatedAt: number; // in seconds
 
   imageUrl?: string;
-  labels?: [Label];
+  labels?: Label[];
   intro?: string;
   curationCategory?: CurationCategory;
   excerpt?: string;
@@ -106,7 +106,7 @@ export type CollectionStory = {
   excerpt: string;
   image_url?: string;
   publisher?: string;
-  authors: [CollectionStoryAuthor];
+  authors: CollectionStoryAuthor[];
   is_from_partner: boolean;
   sort_order?: number;
 };
@@ -127,5 +127,5 @@ export type Label = { collection_label_id: string; name: string };
 
 export const collectionEventSchema = {
   objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-13',
-  collection: 'iglu:com.pocket/collection/jsonschema/1-0-2',
+  collection: 'iglu:com.pocket/collection/jsonschema/1-0-3',
 };

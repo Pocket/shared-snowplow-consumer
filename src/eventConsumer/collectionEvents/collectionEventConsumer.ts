@@ -30,7 +30,9 @@ export function getCollectionEventPayload(
   const eventPayload: CollectionEventBusPayload = eventObj['detail'];
   const detailType = eventObj['detail-type'];
   return {
-    collection: eventPayload,
+    //todo @herraj: refactor as part of chores ticket
+    //and validate events from event-bridge
+    collection: eventPayload['collection'],
     object_version: 'new',
     eventType: DetailTypeToSnowplowMap[detailType],
   };
