@@ -1,32 +1,13 @@
-import fetch from 'node-fetch';
 import { expect } from 'chai';
-import { config } from '../../config';
 import { ObjectUpdate, EventType, collectionEventSchema } from './types';
 import { CollectionEventHandler } from './collectionEventHandler';
 import { testCollectionData } from './testData';
-
-async function snowplowRequest(path: string, post = false): Promise<any> {
-  const response = await fetch(`http://${config.snowplow.endpoint}${path}`, {
-    method: post ? 'POST' : 'GET',
-  });
-  return await response.json();
-}
-
-async function resetSnowplowEvents(): Promise<void> {
-  await snowplowRequest('/micro/reset', true);
-}
-
-async function getAllSnowplowEvents(): Promise<{ [key: string]: any }> {
-  return snowplowRequest('/micro/all');
-}
-
-async function getGoodSnowplowEvents(): Promise<{ [key: string]: any }> {
-  return snowplowRequest('/micro/good');
-}
-
-function parseSnowplowData(data: string): { [key: string]: any } {
-  return JSON.parse(Buffer.from(data, 'base64').toString());
-}
+import {
+  resetSnowplowEvents,
+  getAllSnowplowEvents,
+  getGoodSnowplowEvents,
+  parseSnowplowData,
+} from '../testUtils';
 
 function assertValidSnowplowObjectUpdateEvents(
   events,
