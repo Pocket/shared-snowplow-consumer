@@ -3,7 +3,10 @@ import {
   EventType,
   ShareableListEventPayloadSnowplow,
 } from '../../snowplow/shareableList/types';
-import { testShareableListData } from '../../snowplow/shareableList/testData';
+import {
+  testShareableListData,
+  testPartialShareableListData,
+} from '../../snowplow/shareableList/testData';
 
 describe('getShareableListEventPayload', () => {
   it('should convert shareable_list_created event request body to Snowplow ShareableList', () => {
@@ -23,7 +26,7 @@ describe('getShareableListEventPayload', () => {
   });
 
   it('should convert shareable_list_updated event request body to Snowplow ShareableList', () => {
-    const shareableListCreatedEvent: ShareableListEventPayloadSnowplow = {
+    const shareableListUpdatedEvent: ShareableListEventPayloadSnowplow = {
       shareable_list: testShareableListData,
       eventType: EventType.SHAREABLE_LIST_UPDATED,
     };
@@ -35,11 +38,11 @@ describe('getShareableListEventPayload', () => {
     };
 
     const payload = getShareableListEventPayload(requestBody);
-    expect(payload).toEqual(shareableListCreatedEvent);
+    expect(payload).toEqual(shareableListUpdatedEvent);
   });
 
   it('should convert shareable_list_deleted event request body to Snowplow ShareableList', () => {
-    const shareableListCreatedEvent: ShareableListEventPayloadSnowplow = {
+    const shareableListDeletedEvent: ShareableListEventPayloadSnowplow = {
       shareable_list: testShareableListData,
       eventType: EventType.SHAREABLE_LIST_DELETED,
     };
@@ -51,11 +54,11 @@ describe('getShareableListEventPayload', () => {
     };
 
     const payload = getShareableListEventPayload(requestBody);
-    expect(payload).toEqual(shareableListCreatedEvent);
+    expect(payload).toEqual(shareableListDeletedEvent);
   });
 
   it('should convert shareable_list_published event request body to Snowplow ShareableList', () => {
-    const shareableListCreatedEvent: ShareableListEventPayloadSnowplow = {
+    const shareableListPublishedEvent: ShareableListEventPayloadSnowplow = {
       shareable_list: testShareableListData,
       eventType: EventType.SHAREABLE_LIST_PUBLISHED,
     };
@@ -67,11 +70,11 @@ describe('getShareableListEventPayload', () => {
     };
 
     const payload = getShareableListEventPayload(requestBody);
-    expect(payload).toEqual(shareableListCreatedEvent);
+    expect(payload).toEqual(shareableListPublishedEvent);
   });
 
   it('should convert shareable_list_unpublished event request body to Snowplow ShareableList', () => {
-    const shareableListCreatedEvent: ShareableListEventPayloadSnowplow = {
+    const shareableListUnpublishedEvent: ShareableListEventPayloadSnowplow = {
       shareable_list: testShareableListData,
       eventType: EventType.SHAREABLE_LIST_UNPUBLISHED,
     };
@@ -83,11 +86,11 @@ describe('getShareableListEventPayload', () => {
     };
 
     const payload = getShareableListEventPayload(requestBody);
-    expect(payload).toEqual(shareableListCreatedEvent);
+    expect(payload).toEqual(shareableListUnpublishedEvent);
   });
 
   it('should convert shareable_list_hidden event request body to Snowplow ShareableList', () => {
-    const shareableListCreatedEvent: ShareableListEventPayloadSnowplow = {
+    const shareableListHiddenEvent: ShareableListEventPayloadSnowplow = {
       shareable_list: testShareableListData,
       eventType: EventType.SHAREABLE_LIST_HIDDEN,
     };
@@ -99,6 +102,22 @@ describe('getShareableListEventPayload', () => {
     };
 
     const payload = getShareableListEventPayload(requestBody);
-    expect(payload).toEqual(shareableListCreatedEvent);
+    expect(payload).toEqual(shareableListHiddenEvent);
+  });
+
+  it('should convert shareable_list_hidden event with missing non-required fields request body to Snowplow ShareableList', () => {
+    const shareableListHiddenEvent: ShareableListEventPayloadSnowplow = {
+      shareable_list: testPartialShareableListData,
+      eventType: EventType.SHAREABLE_LIST_HIDDEN,
+    };
+
+    const requestBody = {
+      'detail-type': 'shareable_list_hidden',
+      source: 'shareable-list-events',
+      detail: { shareableList: testPartialShareableListData },
+    };
+
+    const payload = getShareableListEventPayload(requestBody);
+    expect(payload).toEqual(shareableListHiddenEvent);
   });
 });

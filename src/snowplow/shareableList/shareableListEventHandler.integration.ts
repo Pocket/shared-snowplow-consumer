@@ -3,7 +3,10 @@ import { expect } from 'chai';
 import { config } from '../../config';
 import { ObjectUpdate, EventType, shareableListEventSchema } from './types';
 import { ShareableListEventHandler } from './shareableListEventHandler';
-import { testShareableListData } from './testData';
+import {
+  testShareableListData,
+  testPartialShareableListData,
+} from './testData';
 
 async function snowplowRequest(path: string, post = false): Promise<any> {
   const response = await fetch(`http://${config.snowplow.endpoint}${path}`, {
@@ -65,9 +68,32 @@ function assertShareableListSchema(eventContext) {
   ]);
 }
 
+function assertPartialShareableListSchema(eventContext) {
+  expect(eventContext.data).to.include.deep.members([
+    {
+      schema: shareableListEventSchema.shareable_list,
+      data: {
+        shareable_list_external_id:
+          testPartialShareableListData.shareable_list_external_id,
+        slug: testPartialShareableListData.slug,
+        title: testPartialShareableListData.title,
+        status: testPartialShareableListData.status,
+        moderation_status: testPartialShareableListData.moderation_status,
+        created_at: testPartialShareableListData.created_at,
+      },
+    },
+  ]);
+}
+
 const testEventData = {
   shareable_list: {
     ...testShareableListData,
+  },
+};
+
+const testPartialEventData = {
+  shareable_list: {
+    ...testPartialShareableListData,
   },
 };
 
@@ -247,6 +273,35 @@ describe('ShareableListEventHandler', () => {
     assertValidSnowplowObjectUpdateEvents(
       goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
       [EventType.SHAREABLE_LIST_HIDDEN]
+    );
+  });
+
+  it('should send shareable_list_created event with missing non-required fields to snowplow', async () => {
+    new ShareableListEventHandler().process({
+      ...testPartialEventData,
+      eventType: EventType.SHAREABLE_LIST_CREATED,
+    });
+
+    // wait a sec * 3
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // make sure we only have good events
+    const allEvents = await getAllSnowplowEvents();
+    expect(allEvents.total).to.equal(1);
+    expect(allEvents.good).to.equal(1);
+    expect(allEvents.bad).to.equal(0);
+
+    const goodEvents = await getGoodSnowplowEvents();
+
+    const eventContext = parseSnowplowData(
+      goodEvents[0].rawEvent.parameters.cx
+    );
+
+    assertPartialShareableListSchema(eventContext);
+
+    assertValidSnowplowObjectUpdateEvents(
+      goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
+      [EventType.SHAREABLE_LIST_CREATED]
     );
   });
 });

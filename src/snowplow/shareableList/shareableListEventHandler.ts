@@ -67,13 +67,21 @@ export class ShareableListEventHandler extends EventHandler {
           data.shareable_list.shareable_list_external_id,
         slug: data.shareable_list.slug,
         title: data.shareable_list.title,
-        description: data.shareable_list.description,
+        description: data.shareable_list.description
+          ? data.shareable_list.description
+          : undefined,
         status: data.shareable_list.status,
         moderation_status: data.shareable_list.moderation_status,
-        moderated_by: data.shareable_list.moderated_by,
-        moderation_reason: data.shareable_list.moderation_reason,
+        moderated_by: data.shareable_list.moderated_by
+          ? data.shareable_list.moderated_by
+          : undefined,
+        moderation_reason: data.shareable_list.moderation_reason
+          ? data.shareable_list.moderation_reason
+          : undefined,
         created_at: data.shareable_list.created_at,
-        updated_at: data.shareable_list.updated_at,
+        updated_at: data.shareable_list.updated_at
+          ? data.shareable_list.updated_at
+          : undefined,
       },
     };
     return snowplowEvent;

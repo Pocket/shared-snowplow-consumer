@@ -2,6 +2,7 @@ import { userEventConsumer } from './userEvents/userEventConsumer';
 import { prospectEventConsumer } from './prospectEvents/prospectEventConsumer';
 import { collectionEventConsumer } from './collectionEvents/collectionEventConsumer';
 import { shareableListEventConsumer } from './shareableListEvents/shareableListEventConsumer';
+import { shareableListItemEventConsumer } from './shareableListItemEvents/shareableListItemEventConsumer';
 
 //any types shared between events can be added here
 
@@ -39,4 +40,6 @@ export const eventConsumer: {
   [EventType.SHAREABLE_LIST_PUBLISHED]: shareableListEventConsumer,
   [EventType.SHAREABLE_LIST_UNPUBLISHED]: shareableListEventConsumer,
   [EventType.SHAREABLE_LIST_HIDDEN]: shareableListEventConsumer,
+  [EventType.SHAREABLE_LIST_ITEM_CREATED]: shareableListItemEventConsumer,
+  [EventType.SHAREABLE_LIST_ITEM_DELETED]: shareableListItemEventConsumer,
 };
