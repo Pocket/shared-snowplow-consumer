@@ -58,6 +58,7 @@ export const config = {
       prospectApi: 'pocket-prospect-api',
       userApi: 'pocket-user-api',
       collectionApi: 'pocket-collection-api',
+      shareableListsApi: 'pocket-shareable-lists-api',
     },
   },
 };
