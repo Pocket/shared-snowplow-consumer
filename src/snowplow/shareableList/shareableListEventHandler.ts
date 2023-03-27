@@ -78,6 +78,9 @@ export class ShareableListEventHandler extends EventHandler {
         moderation_reason: data.shareable_list.moderation_reason
           ? data.shareable_list.moderation_reason
           : undefined,
+        moderation_details: data.shareable_list.moderation_details
+          ? data.shareable_list.moderation_details
+          : undefined,
         created_at: data.shareable_list.created_at,
         updated_at: data.shareable_list.updated_at
           ? data.shareable_list.updated_at

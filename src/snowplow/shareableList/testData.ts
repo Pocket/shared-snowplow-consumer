@@ -8,7 +8,8 @@ export const testShareableListData: ShareableList['data'] = {
   status: ListStatus.PUBLIC,
   moderation_status: ModerationStatus.VISIBLE,
   moderated_by: 'fake-moderator-username',
-  moderation_reason: 'fake-moderator-reason',
+  moderation_reason: 'SPAM',
+  moderation_details: 'more details here',
   created_at: 1675978338, // 2023-02-09 16:32:18
   updated_at: 1675978338,
 };
