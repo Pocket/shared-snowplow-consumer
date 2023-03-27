@@ -42,6 +42,7 @@ function assertShareableListSchema(eventContext) {
         moderation_status: testShareableListData.moderation_status,
         moderated_by: testShareableListData.moderated_by,
         moderation_reason: testShareableListData.moderation_reason,
+        moderation_details: testShareableListData.moderation_details,
         created_at: testShareableListData.created_at,
         updated_at: testShareableListData.updated_at,
       },
