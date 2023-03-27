@@ -34,7 +34,7 @@ Architecture diagram: https://miro.com/app/board/uXjVO5oHq_U=/
 ```bash
 nvm use
 npm ci
-npm start:dev
+npm run start:dev
 ```
 
 ## To run test for ecs

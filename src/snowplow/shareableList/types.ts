@@ -2,7 +2,7 @@ import { SelfDescribingJson } from '@snowplow/tracker-core';
 
 export const shareableListEventSchema = {
   objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-14',
-  shareable_list: 'iglu:com.pocket/shareable_list/jsonschema/1-0-2',
+  shareable_list: 'iglu:com.pocket/shareable_list/jsonschema/1-0-3',
 };
 
 export type ShareableListEventPayloadSnowplow = {
@@ -37,6 +37,7 @@ export type ShareableList = Omit<SelfDescribingJson, 'data'> & {
     moderation_status: ModerationStatus;
     moderated_by?: string;
     moderation_reason?: string;
+    moderation_details?: string;
     created_at: number; // snowplow schema requires this field in seconds
     updated_at?: number; // snowplow schema requires this field in seconds
   };
