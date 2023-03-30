@@ -17,7 +17,6 @@ export const testShareableListData: ShareableList['data'] = {
 // data with missing non-required fields
 export const testPartialShareableListData: ShareableList['data'] = {
   shareable_list_external_id: 'test-shareable-list-external-id',
-  slug: 'test-shareable-list-slug',
   title: 'Test Shareable List Title',
   status: ListStatus.PUBLIC,
   moderation_status: ModerationStatus.VISIBLE,
