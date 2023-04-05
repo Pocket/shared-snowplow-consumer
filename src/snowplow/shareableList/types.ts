@@ -2,7 +2,7 @@ import { SelfDescribingJson } from '@snowplow/tracker-core';
 
 export const shareableListEventSchema = {
   objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-14',
-  shareable_list: 'iglu:com.pocket/shareable_list/jsonschema/1-0-4',
+  shareable_list: 'iglu:com.pocket/shareable_list/jsonschema/1-0-5',
 };
 
 export type ShareableListEventPayloadSnowplow = {
@@ -30,6 +30,7 @@ export enum EventType {
 export type ShareableList = Omit<SelfDescribingJson, 'data'> & {
   data: {
     shareable_list_external_id: string;
+    user_id: bigint | number;
     slug?: string;
     title: string;
     description?: string;
