@@ -2,6 +2,7 @@ import { ShareableList, ListStatus, ModerationStatus } from './types';
 
 export const testShareableListData: ShareableList['data'] = {
   shareable_list_external_id: 'test-shareable-list-external-id',
+  user_id: 12345,
   slug: 'test-shareable-list-slug',
   title: 'Test Shareable List Title',
   description: 'Test shareable list description',
@@ -17,6 +18,7 @@ export const testShareableListData: ShareableList['data'] = {
 // data with missing non-required fields
 export const testPartialShareableListData: ShareableList['data'] = {
   shareable_list_external_id: 'test-shareable-list-external-id',
+  user_id: 12345,
   title: 'Test Shareable List Title',
   status: ListStatus.PUBLIC,
   moderation_status: ModerationStatus.VISIBLE,

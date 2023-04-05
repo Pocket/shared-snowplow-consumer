@@ -35,6 +35,7 @@ function assertShareableListSchema(eventContext) {
       data: {
         shareable_list_external_id:
           testShareableListData.shareable_list_external_id,
+        user_id: testShareableListData.user_id,
         slug: testShareableListData.slug,
         title: testShareableListData.title,
         description: testShareableListData.description,
@@ -57,6 +58,7 @@ function assertPartialShareableListSchema(eventContext) {
       data: {
         shareable_list_external_id:
           testPartialShareableListData.shareable_list_external_id,
+        user_id: testPartialShareableListData.user_id,
         title: testPartialShareableListData.title,
         status: testPartialShareableListData.status,
         moderation_status: testPartialShareableListData.moderation_status,

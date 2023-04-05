@@ -65,6 +65,9 @@ export class ShareableListEventHandler extends EventHandler {
       data: {
         shareable_list_external_id:
           data.shareable_list.shareable_list_external_id,
+        user_id: data.shareable_list.user_id
+          ? data.shareable_list.user_id
+          : undefined,
         slug: data.shareable_list.slug,
         title: data.shareable_list.title,
         description: data.shareable_list.description
