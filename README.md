@@ -21,7 +21,7 @@ Architecture diagram: https://miro.com/app/board/uXjVO5oHq_U=/
 - in `.aws`, add the SNS arn to `SNSTopicsSubscriptionList`
 - in `eventConsumer`, please map the event-bridge payload to your snowplow format.
 - in `snowplow` folder, please construct your snowplow payload as per your schema model.
-  - Make sure the schema version in `config.schema` that matches with dev/prod snowplow version.
+  - Make sure the snowplow schema version matches with dev/prod snowplow version.
 
 ### Note:
 
