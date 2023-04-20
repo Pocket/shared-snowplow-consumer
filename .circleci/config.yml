@@ -50,7 +50,7 @@ only_dev: &only_dev
 jobs:
   build:
     docker:
-      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+      - image: cimg/node:16.20
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -59,13 +59,6 @@ jobs:
       # Define the working directory for this job
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            # If this gets our of sync, you can increment the version (vX).  Just be
-            # sure to match that version when saving the cache as well.
-            - node-v1-{{ checksum "package-lock.json" }}
-            - node-v1-
       # Add user to npmrc
       - run:
           name: Authenticate with GitHub package registry
@@ -73,11 +66,6 @@ jobs:
       - run:
           name: install node modules
           command: npm ci
-      # Save the cache to avoid extraneous downloads
-      - save_cache:
-          key: node-v1-{{ checksum "package-lock.json" }}
-          paths:
-            - ./node_modules
       #Validate backstage entity.
       #Eventually this should be its own job, but they need to fix it, or we add it to our circleci orbs
       - backstage-entity-validator/validate:
@@ -99,10 +87,43 @@ jobs:
           paths:
             - app_prod
 
-  test_integrations:
-    description: Run integration tests against external services, e.g. MySQL
+  test_integrations_dev:
+    description: Run integration tests against dev snowplow image
     docker:
-      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+      - image: cimg/node:16.20
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          NODE_ENV: test
+          AWS_XRAY_LOG_LEVEL: silent
+          AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
+      - image: pocket/snowplow-micro:latest
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+    steps:
+      - checkout
+      - run:
+          name: Authenticate with GitHub package registry
+          command: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
+      - run:
+          name: install node modules
+          command: npm ci
+      - run:
+          name: run setup.sh
+          command: |
+            export $(egrep -v '^#' .docker/local.env | xargs -0) && ./.circleci/scripts/setup.sh --hosts --db
+      - run:
+          name: run tests
+          command: |
+            export $(egrep -v '^#' .docker/local.env | xargs -0)
+            npm run test-integrations  -- --ci --watchAll=false --forceExit
+
+  test_integrations_prod:
+    description: Run integration tests against prod snowplow image
+    docker:
+      - image: cimg/node:16.20
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -116,24 +137,12 @@ jobs:
           password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            # If this gets our of sync, you can increment the version (vX).  Just be
-            # sure to match that version when saving the cache as well.
-            - node-v1-{{ checksum "package-lock.json" }}
-            - node-v1-
       - run:
           name: Authenticate with GitHub package registry
           command: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
       - run:
           name: install node modules
           command: npm ci
-      # Save the cache to avoid extraneous downloads
-      - save_cache:
-          key: node-v1-{{ checksum "package-lock.json" }}
-          paths:
-            - ./node_modules
       - run:
           name: run setup.sh
           command: |
@@ -147,7 +156,7 @@ jobs:
   test_specs:
     description: Run spec tests
     docker:
-      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+      - image: cimg/node:16.20
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -157,24 +166,12 @@ jobs:
           AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            # If this gets our of sync, you can increment the version (vX).  Just be
-            # sure to match that version when saving the cache as well.
-            - node-v1-{{ checksum "package-lock.json" }}
-            - node-v1-
       - run:
           name: Authenticate with GitHub package registry
           command: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
       - run:
           name: install node modules
           command: npm ci
-      # Save the cache to avoid extraneous downloads
-      - save_cache:
-          key: node-v1-{{ checksum "package-lock.json" }}
-          paths:
-            - ./node_modules
       - run:
           name: run tests
           command: npm run test
@@ -187,10 +184,15 @@ workflows:
           context: pocket
           name: test_specs
 
-      - test_integrations:
+      - test_integrations_prod:
           <<: *not_main
           context: pocket
-          name: test_integrations
+          name: test_integrations_prod
+
+      - test_integrations_dev:
+          <<: *not_main
+          context: pocket
+          name: test_integrations_dev
 
       - build:
           context: pocket
