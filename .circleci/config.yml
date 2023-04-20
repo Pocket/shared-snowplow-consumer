@@ -87,40 +87,11 @@ jobs:
           paths:
             - app_prod
 
-  test_integrations_dev:
-    description: Run integration tests against dev snowplow image
-    docker:
-      - image: cimg/node:16.20
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
-        environment:
-          NODE_ENV: test
-          AWS_XRAY_LOG_LEVEL: silent
-          AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
-      - image: pocket/snowplow-micro:latest
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
-    steps:
-      - checkout
-      - run:
-          name: Authenticate with GitHub package registry
-          command: echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
-      - run:
-          name: install node modules
-          command: npm ci
-      - run:
-          name: run setup.sh
-          command: |
-            export $(egrep -v '^#' .docker/local.env | xargs -0) && ./.circleci/scripts/setup.sh --hosts --db
-      - run:
-          name: run tests
-          command: |
-            export $(egrep -v '^#' .docker/local.env | xargs -0)
-            npm run test-integrations  -- --ci --watchAll=false --forceExit
-
-  test_integrations_prod:
+  test_integrations:
+    parameters:
+      snowplow_image:
+        default: "pocket/snowplow-micro:prod"
+        type: string
     description: Run integration tests against prod snowplow image
     docker:
       - image: cimg/node:16.20
@@ -131,7 +102,7 @@ jobs:
           NODE_ENV: test
           AWS_XRAY_LOG_LEVEL: silent
           AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
-      - image: pocket/snowplow-micro:prod
+      - image: << parameters.snowplow_image >>
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -184,15 +155,17 @@ workflows:
           context: pocket
           name: test_specs
 
-      - test_integrations_prod:
+      - test_integrations:
           <<: *not_main
           context: pocket
-          name: test_integrations_prod
+          snowplow_image: pocket/snowplow-micro:prod
+          name: test_integrations
 
-      - test_integrations_dev:
+      - test_integrations:
           <<: *not_main
           context: pocket
-          name: test_integrations_dev
+          snowplow_image: pocket/snowplow-micro:latest
+          name: test_integrations
 
       - build:
           context: pocket
