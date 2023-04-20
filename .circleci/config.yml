@@ -159,13 +159,13 @@ workflows:
           <<: *not_main
           context: pocket
           snowplow_image: pocket/snowplow-micro:prod
-          name: test_integrations
+          name: test_integrations-prod
 
       - test_integrations:
           <<: *not_main
           context: pocket
           snowplow_image: pocket/snowplow-micro:latest
-          name: test_integrations
+          name: test_integrations-dev
 
       - build:
           context: pocket
