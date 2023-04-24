@@ -50,7 +50,7 @@ only_dev: &only_dev
 jobs:
   build:
     docker:
-      - image: cimg/node:16.20
+      - image: cimg/node:18.16
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -94,7 +94,7 @@ jobs:
         type: string
     description: Run integration tests against prod snowplow image
     docker:
-      - image: cimg/node:16.20
+      - image: cimg/node:18.16
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -127,7 +127,7 @@ jobs:
   test_specs:
     description: Run spec tests
     docker:
-      - image: cimg/node:16.20
+      - image: cimg/node:18.16
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
