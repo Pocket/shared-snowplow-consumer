@@ -1,24 +1,27 @@
-import { Resource } from 'cdktf';
-import { Construct } from 'constructs';
 import { config } from './config';
 import {
   PocketALBApplication,
   PocketECSCodePipeline,
   PocketPagerDuty,
 } from '@pocket-tools/terraform-modules';
-import { datasources, kms, sns, sqs } from '@cdktf/provider-aws';
+import { DataAwsCallerIdentity } from '@cdktf/provider-aws/lib/data-aws-caller-identity';
+import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/data-aws-kms-alias';
+import { DataAwsRegion } from '@cdktf/provider-aws/lib/data-aws-region';
+import { DataAwsSnsTopic } from '@cdktf/provider-aws/lib/data-aws-sns-topic';
+import { SqsQueue } from '@cdktf/provider-aws/lib/sqs-queue';
+import { Construct } from 'constructs';
 
 export type SharedSnowplowConsumerProps = {
-  caller: datasources.DataAwsCallerIdentity;
+  caller: DataAwsCallerIdentity;
   pagerDuty: PocketPagerDuty;
-  region: datasources.DataAwsRegion;
-  secretsManagerKmsAlias: kms.DataAwsKmsAlias;
-  snsTopic: sns.DataAwsSnsTopic;
-  sqsConsumeQueue: sqs.SqsQueue;
-  sqsDLQ: sqs.SqsQueue;
+  region: DataAwsRegion;
+  secretsManagerKmsAlias: DataAwsKmsAlias;
+  snsTopic: DataAwsSnsTopic;
+  sqsConsumeQueue: SqsQueue;
+  sqsDLQ: SqsQueue;
 };
 
-export class SharedSnowplowConsumerApp extends Resource {
+export class SharedSnowplowConsumerApp extends Construct {
   constructor(
     scope: Construct,
     private name: string,

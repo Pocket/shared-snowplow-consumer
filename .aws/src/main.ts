@@ -1,3 +1,25 @@
+import { config } from './config';
+import {
+  SharedSnowplowConsumerApp,
+  SharedSnowplowConsumerProps,
+} from './sharedSnowplowConsumerApp';
+import { ArchiveProvider } from '@cdktf/provider-archive/lib/provider';
+import { AwsProvider } from '@cdktf/provider-aws/lib/provider';
+import { LocalProvider } from '@cdktf/provider-local/lib/provider';
+import { NullProvider } from '@cdktf/provider-null/lib/provider';
+import { PagerdutyProvider } from '@cdktf/provider-pagerduty/lib/provider';
+
+import { CloudwatchMetricAlarm } from '@cdktf/provider-aws/lib/cloudwatch-metric-alarm';
+import { DataAwsCallerIdentity } from '@cdktf/provider-aws/lib/data-aws-caller-identity';
+import { DataAwsIamPolicyDocument } from '@cdktf/provider-aws/lib/data-aws-iam-policy-document';
+import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/data-aws-kms-alias';
+import { DataAwsRegion } from '@cdktf/provider-aws/lib/data-aws-region';
+import { DataAwsSnsTopic } from '@cdktf/provider-aws/lib/data-aws-sns-topic';
+import { SnsTopicSubscription } from '@cdktf/provider-aws/lib/sns-topic-subscription';
+import { SqsQueue } from '@cdktf/provider-aws/lib/sqs-queue';
+import { SqsQueuePolicy } from '@cdktf/provider-aws/lib/sqs-queue-policy';
+
+import { PocketPagerDuty } from '@pocket-tools/terraform-modules';
 import { Construct } from 'constructs';
 import {
   App,
@@ -5,25 +27,6 @@ import {
   RemoteBackend,
   TerraformStack,
 } from 'cdktf';
-import {
-  AwsProvider,
-  cloudwatch,
-  iam,
-  kms,
-  sns,
-  datasources,
-  sqs,
-} from '@cdktf/provider-aws';
-import { config } from './config';
-import { PocketPagerDuty } from '@pocket-tools/terraform-modules';
-import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
-import { LocalProvider } from '@cdktf/provider-local';
-import { ArchiveProvider } from '@cdktf/provider-archive';
-import { NullProvider } from '@cdktf/provider-null';
-import {
-  SharedSnowplowConsumerApp,
-  SharedSnowplowConsumerProps,
-} from './sharedSnowplowConsumerApp';
 
 class SnowplowSharedConsumerStack extends TerraformStack {
   constructor(scope: Construct, private name: string) {
@@ -41,19 +44,19 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       workspaces: [{ prefix: `${config.name}-` }],
     });
 
-    const region = new datasources.DataAwsRegion(this, 'region');
-    const caller = new datasources.DataAwsCallerIdentity(this, 'caller');
+    const region = new DataAwsRegion(this, 'region');
+    const caller = new DataAwsCallerIdentity(this, 'caller');
     const pagerDuty = this.createPagerDuty();
 
     // Consume Queue - receives all events from event-bridge
-    const sqsConsumeQueue = new sqs.SqsQueue(this, 'shared-event-consumer', {
+    const sqsConsumeQueue = new SqsQueue(this, 'shared-event-consumer', {
       name: `${config.prefix}-SharedEventConsumer-Queue`,
       tags: config.tags,
     });
 
     // Dead Letter Queue (dlq) for sqs-sns subscription.
     // Also re-used for any Snowplow emission failure
-    const snsTopicDlq = new sqs.SqsQueue(this, 'sns-topic-dlq', {
+    const snsTopicDlq = new SqsQueue(this, 'sns-topic-dlq', {
       name: `${config.prefix}-SNS-Topics-DLQ`,
       tags: config.tags,
     });
@@ -150,7 +153,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
    * @private
    */
   private getCodeDeploySnsTopic() {
-    return new sns.DataAwsSnsTopic(this, 'backend_notifications', {
+    return new DataAwsSnsTopic(this, 'backend_notifications', {
       name: `Backend-${config.environment}-ChatBot`,
     });
   }
@@ -160,7 +163,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
    * @private
    */
   private getSecretsManagerKmsAlias() {
-    return new kms.DataAwsKmsAlias(this, 'kms_alias', {
+    return new DataAwsKmsAlias(this, 'kms_alias', {
       name: 'alias/aws/secretsmanager',
     });
   }
@@ -174,13 +177,13 @@ class SnowplowSharedConsumerStack extends TerraformStack {
    * @private
    */
   private subscribeSqsToSnsTopic(
-    sqsConsumeQueue: sqs.SqsQueue,
-    snsTopicDlq: sqs.SqsQueue,
+    sqsConsumeQueue: SqsQueue,
+    snsTopicDlq: SqsQueue,
     snsTopicArn: string,
     topicName: string
   ) {
     // This Topic already exists and is managed elsewhere
-    return new sns.SnsTopicSubscription(this, `${topicName}-sns-subscription`, {
+    return new SnsTopicSubscription(this, `${topicName}-sns-subscription`, {
       topicArn: snsTopicArn,
       protocol: 'sqs',
       endpoint: sqsConsumeQueue.arn,
@@ -230,15 +233,15 @@ class SnowplowSharedConsumerStack extends TerraformStack {
    * @private
    */
   private createPoliciesForAccountDeletionMonitoringSqs(
-    snsTopicQueue: sqs.SqsQueue,
-    snsTopicDlq: sqs.SqsQueue,
+    snsTopicQueue: SqsQueue,
+    snsTopicDlq: SqsQueue,
     snsTopicArns: string[]
   ): void {
     [
       { name: 'shared-snowplow-consumer-sns-sqs', resource: snsTopicQueue },
       { name: 'shared-snowplow-consumer-sns-dlq', resource: snsTopicDlq },
     ].forEach((queue) => {
-      const policy = new iam.DataAwsIamPolicyDocument(
+      const policy = new DataAwsIamPolicyDocument(
         this,
         `${queue.name}-policy-document`,
         {
@@ -267,7 +270,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
         }
       ).json;
 
-      new sqs.SqsQueuePolicy(this, `${queue.name}-policy`, {
+      new SqsQueuePolicy(this, `${queue.name}-policy`, {
         queueUrl: queue.resource.url,
         policy: policy,
       });
@@ -295,7 +298,7 @@ class SnowplowSharedConsumerStack extends TerraformStack {
     periodInSeconds = 900,
     threshold = 15
   ) {
-    new cloudwatch.CloudwatchMetricAlarm(this, alarmName.toLowerCase(), {
+    new CloudwatchMetricAlarm(this, alarmName.toLowerCase(), {
       alarmActions: config.isDev
         ? []
         : [pagerDuty.snsNonCriticalAlarmTopic.arn],
