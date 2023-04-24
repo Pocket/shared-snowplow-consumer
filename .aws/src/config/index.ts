@@ -1,4 +1,4 @@
-const name = 'SharedSnowplowConsumer'; //todo: change the service name, match shared infrastructure name
+const name = 'SharedSnowplowConsumer';
 const domainPrefix = 'shared-snowplow-consumer';
 const isDev = process.env.NODE_ENV === 'development';
 const environment = isDev ? 'Dev' : 'Prod';
@@ -14,6 +14,10 @@ const branch = isDev ? 'dev' : 'main';
 //Arbitrary size and count for cache. No logic was used in deciding this.
 const cacheNodes = isDev ? 2 : 2;
 const cacheSize = isDev ? 'cache.t2.micro' : 'cache.t3.medium';
+
+const snowplowEndpoint = isDev
+  ? 'com-getpocket-prod1.mini.snplow.net'
+  : 'com-getpocket-prod1.collector.snplow.net';
 
 export const config = {
   name,
@@ -45,5 +49,17 @@ export const config = {
   tags: {
     service: name,
     environment,
+  },
+  eventBridge: {
+    prefix: 'PocketEventBridge',
+    userTopic: 'UserEventTopic',
+    prospectEventTopic: 'ProspectEventTopic',
+    shareableListEventTopic: 'ShareableListEventTopic',
+    shareableListItemEventTopic: 'ShareableListItemEventTopic',
+    collectionEventTopic: 'CollectionEventTopic',
+  },
+  envVars: {
+    snowplowEndpoint: snowplowEndpoint,
+    ecsEndpoint: `https://${domain}`,
   },
 };
