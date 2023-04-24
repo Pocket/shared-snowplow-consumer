@@ -47,6 +47,8 @@ npm run test-integrations
 
 ## Start docker
 
+Copy `.env.example` to `.env` (a .gitignore-d file) and fill in your GitHub token.
+
 ```bash
 # npm ci not required if already up-to-date
 npm ci
