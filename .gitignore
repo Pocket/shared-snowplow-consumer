@@ -33,3 +33,6 @@ tmp
 
 # Build files
 dist
+/**/node_modules/
+/**/dist
+.env
