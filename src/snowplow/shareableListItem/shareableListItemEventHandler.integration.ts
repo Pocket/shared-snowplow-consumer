@@ -43,6 +43,7 @@ function assertShareableListItemSchema(eventContext) {
         image_url: testShareableListItemData.image_url,
         authors: testShareableListItemData.authors,
         publisher: testShareableListItemData.publisher,
+        note: testShareableListItemData.note,
         sort_order: testShareableListItemData.sort_order,
         created_at: testShareableListItemData.created_at,
         updated_at: testShareableListItemData.updated_at,
@@ -140,6 +141,35 @@ describe('ShareableListItemEventHandler', () => {
     assertValidSnowplowObjectUpdateEvents(
       goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
       [EventType.SHAREABLE_LIST_ITEM_DELETED]
+    );
+  });
+
+  it('should send shareable_list_item_updated event to snowplow', async () => {
+    new ShareableListItemEventHandler().process({
+      ...testEventData,
+      eventType: EventType.SHAREABLE_LIST_ITEM_UPDATED,
+    });
+
+    // wait a sec * 3
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // make sure we only have good events
+    const allEvents = await getAllSnowplowEvents();
+    expect(allEvents.total).to.equal(1);
+    expect(allEvents.good).to.equal(1);
+    expect(allEvents.bad).to.equal(0);
+
+    const goodEvents = await getGoodSnowplowEvents();
+
+    const eventContext = parseSnowplowData(
+      goodEvents[0].rawEvent.parameters.cx
+    );
+
+    assertShareableListItemSchema(eventContext);
+
+    assertValidSnowplowObjectUpdateEvents(
+      goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
+      [EventType.SHAREABLE_LIST_ITEM_UPDATED]
     );
   });
 

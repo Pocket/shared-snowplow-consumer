@@ -40,10 +40,13 @@ function assertShareableListSchema(eventContext) {
         title: testShareableListData.title,
         description: testShareableListData.description,
         status: testShareableListData.status,
+        list_item_note_visibility:
+          testShareableListData.list_item_note_visibility,
         moderation_status: testShareableListData.moderation_status,
         moderated_by: testShareableListData.moderated_by,
         moderation_reason: testShareableListData.moderation_reason,
         moderation_details: testShareableListData.moderation_details,
+        restoration_reason: testShareableListData.restoration_reason,
         created_at: testShareableListData.created_at,
         updated_at: testShareableListData.updated_at,
       },
@@ -61,6 +64,8 @@ function assertPartialShareableListSchema(eventContext) {
         user_id: testPartialShareableListData.user_id,
         title: testPartialShareableListData.title,
         status: testPartialShareableListData.status,
+        list_item_note_visibility:
+          testPartialShareableListData.list_item_note_visibility,
         moderation_status: testPartialShareableListData.moderation_status,
         created_at: testPartialShareableListData.created_at,
       },
@@ -256,6 +261,35 @@ describe('ShareableListEventHandler', () => {
     assertValidSnowplowObjectUpdateEvents(
       goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
       [EventType.SHAREABLE_LIST_HIDDEN]
+    );
+  });
+
+  it('should send shareable_list_unhidden event to snowplow', async () => {
+    new ShareableListEventHandler().process({
+      ...testEventData,
+      eventType: EventType.SHAREABLE_LIST_UNHIDDEN,
+    });
+
+    // wait a sec * 3
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // make sure we only have good events
+    const allEvents = await getAllSnowplowEvents();
+    expect(allEvents.total).to.equal(1);
+    expect(allEvents.good).to.equal(1);
+    expect(allEvents.bad).to.equal(0);
+
+    const goodEvents = await getGoodSnowplowEvents();
+
+    const eventContext = parseSnowplowData(
+      goodEvents[0].rawEvent.parameters.cx
+    );
+
+    assertShareableListSchema(eventContext);
+
+    assertValidSnowplowObjectUpdateEvents(
+      goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
+      [EventType.SHAREABLE_LIST_UNHIDDEN]
     );
   });
 
