@@ -20,7 +20,9 @@ export enum EventType {
   SHAREABLE_LIST_PUBLISHED = 'shareable_list_published',
   SHAREABLE_LIST_UNPUBLISHED = 'shareable_list_unpublished',
   SHAREABLE_LIST_HIDDEN = 'shareable_list_hidden',
+  SHAREABLE_LIST_UNHIDDEN = 'shareable_list_unhidden',
   SHAREABLE_LIST_ITEM_CREATED = 'shareable_list_item_created',
+  SHAREABLE_LIST_ITEM_UPDATED = 'shareable_list_item_updated',
   SHAREABLE_LIST_ITEM_DELETED = 'shareable_list_item_deleted',
 }
 
@@ -40,6 +42,8 @@ export const eventConsumer: {
   [EventType.SHAREABLE_LIST_PUBLISHED]: shareableListEventConsumer,
   [EventType.SHAREABLE_LIST_UNPUBLISHED]: shareableListEventConsumer,
   [EventType.SHAREABLE_LIST_HIDDEN]: shareableListEventConsumer,
+  [EventType.SHAREABLE_LIST_UNHIDDEN]: shareableListEventConsumer,
   [EventType.SHAREABLE_LIST_ITEM_CREATED]: shareableListItemEventConsumer,
+  [EventType.SHAREABLE_LIST_ITEM_UPDATED]: shareableListItemEventConsumer,
   [EventType.SHAREABLE_LIST_ITEM_DELETED]: shareableListItemEventConsumer,
 };

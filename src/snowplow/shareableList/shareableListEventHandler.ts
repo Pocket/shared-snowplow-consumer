@@ -74,6 +74,8 @@ export class ShareableListEventHandler extends EventHandler {
           ? data.shareable_list.description
           : undefined,
         status: data.shareable_list.status,
+        list_item_note_visibility:
+          data.shareable_list.list_item_note_visibility,
         moderation_status: data.shareable_list.moderation_status,
         moderated_by: data.shareable_list.moderated_by
           ? data.shareable_list.moderated_by
@@ -83,6 +85,9 @@ export class ShareableListEventHandler extends EventHandler {
           : undefined,
         moderation_details: data.shareable_list.moderation_details
           ? data.shareable_list.moderation_details
+          : undefined,
+        restoration_reason: data.shareable_list.restoration_reason
+          ? data.shareable_list.restoration_reason
           : undefined,
         created_at: data.shareable_list.created_at,
         updated_at: data.shareable_list.updated_at
