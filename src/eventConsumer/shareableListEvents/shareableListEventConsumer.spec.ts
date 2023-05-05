@@ -105,6 +105,22 @@ describe('getShareableListEventPayload', () => {
     expect(payload).toEqual(shareableListHiddenEvent);
   });
 
+  it('should convert shareable_list_unhidden event request body to Snowplow ShareableList', () => {
+    const shareableListHiddenEvent: ShareableListEventPayloadSnowplow = {
+      shareable_list: testShareableListData,
+      eventType: EventType.SHAREABLE_LIST_UNHIDDEN,
+    };
+
+    const requestBody = {
+      'detail-type': 'shareable_list_unhidden',
+      source: 'shareable-list-events',
+      detail: { shareableList: testShareableListData },
+    };
+
+    const payload = getShareableListEventPayload(requestBody);
+    expect(payload).toEqual(shareableListHiddenEvent);
+  });
+
   it('should convert shareable_list_hidden event with missing non-required fields request body to Snowplow ShareableList', () => {
     const shareableListHiddenEvent: ShareableListEventPayloadSnowplow = {
       shareable_list: testPartialShareableListData,

@@ -87,6 +87,9 @@ export class ShareableListItemEventHandler extends EventHandler {
         publisher: data.shareable_list_item.publisher
           ? data.shareable_list_item.publisher
           : undefined,
+        note: data.shareable_list_item.note
+          ? data.shareable_list_item.note
+          : undefined,
         sort_order: data.shareable_list_item.sort_order,
         created_at: data.shareable_list_item.created_at,
         updated_at: data.shareable_list_item.updated_at

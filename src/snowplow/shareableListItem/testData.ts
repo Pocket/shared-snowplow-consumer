@@ -9,6 +9,7 @@ export const testShareableListItemData: ShareableListItem['data'] = {
   image_url: 'https://test-shareable-list-item-image-url.com',
   authors: ['Author1', 'Author2'],
   publisher: 'Fake Publisher',
+  note: 'some note',
   sort_order: 1,
   created_at: 1675978338, // 2023-02-09 16:32:18
   updated_at: 1675978338,

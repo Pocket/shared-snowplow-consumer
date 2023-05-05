@@ -26,6 +26,23 @@ describe('getShareableListItemEventPayload', () => {
     expect(payload).toEqual(shareableListItemCreatedEvent);
   });
 
+  it('should convert shareable_list_item_updated event request body to Snowplow ShareableListItem', () => {
+    const shareableListItemCreatedEvent: ShareableListItemEventPayloadSnowplow =
+      {
+        shareable_list_item: testShareableListItemData,
+        eventType: EventType.SHAREABLE_LIST_ITEM_UPDATED,
+      };
+
+    const requestBody = {
+      'detail-type': 'shareable_list_item_updated',
+      source: 'shareable-list-item-events',
+      detail: { shareableListItem: testShareableListItemData },
+    };
+
+    const payload = getShareableListItemEventPayload(requestBody);
+    expect(payload).toEqual(shareableListItemCreatedEvent);
+  });
+
   it('should convert shareable_list_item_deleted event request body to Snowplow ShareableListItem', () => {
     const shareableListItemDeletedEvent: ShareableListItemEventPayloadSnowplow =
       {

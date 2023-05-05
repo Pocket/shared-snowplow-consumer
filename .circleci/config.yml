@@ -90,7 +90,7 @@ jobs:
   test_integrations:
     parameters:
       snowplow_image:
-        default: "pocket/snowplow-micro:prod"
+        default: 'pocket/snowplow-micro:prod'
         type: string
     description: Run integration tests against prod snowplow image
     docker:
