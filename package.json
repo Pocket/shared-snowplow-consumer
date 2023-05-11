@@ -39,7 +39,7 @@
   "devDependencies": {
     "@faker-js/faker": "7.6.0",
     "@pocket-tools/eslint-config": "2.0.0",
-    "@pocket-tools/tsconfig": "1.0.2",
+    "@pocket-tools/tsconfig": "2.0.1",
     "@types/chai": "4.3.5",
     "@types/chai-datetime": "0.0.37",
     "@types/jest": "26.0.24",
