@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/Pocket/shared-snowplow-consumer#readme",
   "dependencies": {
-    "@aws-sdk/client-sqs": "^3.259.0",
+    "@aws-sdk/client-sqs": "^3.332.0",
     "@sentry/node": "^6.17.5",
     "@sentry/tracing": "^7.51.2",
     "@snowplow/node-tracker": "3.10.0",
