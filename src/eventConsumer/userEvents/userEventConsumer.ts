@@ -4,6 +4,7 @@ import {
   UserEventPayloadSnowplow,
 } from '../../snowplow/user/types';
 
+
 export type UserEventPayload = {
   userId: string;
   email: string;
