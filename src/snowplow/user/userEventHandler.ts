@@ -110,15 +110,23 @@ export class UserEventHandler extends EventHandler {
   private static generateUserContext(
     data: UserEventPayloadSnowplow
   ): UserContext {
+    const userDataWithoutGuid = {
+      email: data.user.email,
+      hashed_guid: data.user.hashedGuid,
+      user_id: parseInt(data.user.id),
+      hashed_user_id: data.user.hashedId,
+    };
+
+    if (data.user.guid) {
+      return {
+        schema: userEventsSchema.user,
+        data: { ...userDataWithoutGuid, guid: data.user.guid },
+      };
+    }
+
     return {
       schema: userEventsSchema.user,
-      data: {
-        email: data.user.email,
-        guid: data.user.guid,
-        hashed_guid: data.user.hashedGuid,
-        user_id: parseInt(data.user.id),
-        hashed_user_id: data.user.hashedId,
-      },
+      data: { ...userDataWithoutGuid },
     };
   }
 
