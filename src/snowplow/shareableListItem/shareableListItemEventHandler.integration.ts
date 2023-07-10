@@ -38,6 +38,11 @@ function assertShareableListItemSchema(eventContext) {
         shareable_list_external_id:
           testShareableListItemData.shareable_list_external_id,
         given_url: testShareableListItemData.given_url,
+        title: testShareableListItemData.title,
+        excerpt: testShareableListItemData.excerpt,
+        image_url: testShareableListItemData.image_url,
+        authors: testShareableListItemData.authors,
+        publisher: testShareableListItemData.publisher,
         note: testShareableListItemData.note,
         sort_order: testShareableListItemData.sort_order,
         created_at: testShareableListItemData.created_at,
