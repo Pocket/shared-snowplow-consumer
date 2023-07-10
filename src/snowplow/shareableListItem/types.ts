@@ -2,7 +2,7 @@ import { SelfDescribingJson } from '@snowplow/tracker-core';
 
 export const shareableListItemEventSchema = {
   objectUpdate: 'iglu:com.pocket/object_update/jsonschema/1-0-15',
-  shareable_list_item: 'iglu:com.pocket/shareable_list_item/jsonschema/1-0-4',
+  shareable_list_item: 'iglu:com.pocket/shareable_list_item/jsonschema/1-0-5',
 };
 
 export type ShareableListItemEventPayloadSnowplow = {
@@ -29,6 +29,11 @@ export type ShareableListItem = Omit<SelfDescribingJson, 'data'> & {
     shareable_list_item_external_id: string;
     shareable_list_external_id: string;
     given_url: string;
+    title?: string;
+    excerpt?: string;
+    image_url?: string;
+    authors?: string[];
+    publisher?: string;
     note?: string;
     sort_order: number;
     created_at: number; // snowplow schema requires this field in seconds
