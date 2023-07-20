@@ -138,4 +138,31 @@ describe('UserEventHandler', () => {
       ['account_email_updated']
     );
   });
+
+  it('should send account password changed event to snowplow', async () => {
+    new UserEventHandler().process({
+      ...testEventData,
+      eventType: EventType.ACCOUNT_PASSWORD_CHANGED,
+    });
+
+    // wait a sec * 3
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // make sure we only have good events
+    const allEvents = await getAllSnowplowEvents();
+    expect(allEvents.total).to.equal(1);
+    expect(allEvents.good).to.equal(1);
+    expect(allEvents.bad).to.equal(0);
+
+    const goodEvents = await getGoodSnowplowEvents();
+    const eventContext = parseSnowplowData(
+      goodEvents[0].rawEvent.parameters.cx
+    );
+    assertApiAndUserSchema(eventContext);
+    assertAccountSchema(eventContext);
+    assertValidSnowplowObjectUpdateEvents(
+      goodEvents.map((goodEvent) => goodEvent.rawEvent.parameters.ue_px),
+      ['account_password_changed']
+    );
+  });
 });
