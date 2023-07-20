@@ -28,6 +28,7 @@ export type UserEventPayload = {
 export const DetailTypeToSnowplowMap: Record<string, EventTypeString> = {
   'account-deletion': 'ACCOUNT_DELETE',
   'account-email-updated': 'ACCOUNT_EMAIL_UPDATED',
+  'account-password-changed': 'ACCOUNT_PASSWORD_CHANGED',
 };
 
 export function userEventConsumer(requestBody: any) {

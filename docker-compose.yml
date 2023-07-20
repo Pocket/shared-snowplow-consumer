@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   app:
-    image: node:18
+    image: node:18-slim@sha256:b175cd7f3358c399f7bcee9b1032b86b71b1afa4cfb4dd0db55d66f871475a3e
     platform: linux/amd64
     working_dir: /app
     ports:
