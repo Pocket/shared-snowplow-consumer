@@ -213,10 +213,10 @@ class SnowplowSharedConsumerStack extends TerraformStack {
       prefix: config.prefix,
       service: {
         criticalEscalationPolicyId: incidentManagement
-          .get('policy_backend_critical_id')
+          .get('policy_default_critical_id')
           .toString(),
         nonCriticalEscalationPolicyId: incidentManagement
-          .get('policy_backend_non_critical_id')
+          .get('policy_default_non_critical_id')
           .toString(),
       },
     });
