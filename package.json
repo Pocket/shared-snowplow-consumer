@@ -43,7 +43,7 @@
     "@types/chai": "4.3.5",
     "@types/chai-datetime": "0.0.37",
     "@types/jest": "26.0.24",
-    "@types/node": "18.16.0",
+    "@types/node": "20.10.0",
     "@types/sinon": "10.0.15",
     "chai": "4.3.7",
     "chai-datetime": "1.8.0",
