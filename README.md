@@ -1,5 +1,8 @@
 # SharedSnowplowConsumer
 
+> [!IMPORTANT]  
+> This repo has been moved to [Pocket's Monorepo](https://github.com/Pocket/pocket-monorepo)
+
 shared consumer for consuming from event-bridge and emitting to snowplow.
 ![Architecture](snowplow.png)
 
